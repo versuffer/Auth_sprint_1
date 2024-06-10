@@ -55,3 +55,44 @@ async def logout(
     # access_token: AuthorizationHeader,
 ):
     pass
+
+
+@auth_router.post(
+    '/reset/username',
+    status_code=status.HTTP_200_OK,
+    summary='Поменять имя пользователя',
+    # response_model=ResetUsernameResponseSchema,
+    tags=[ApiTags.V1_AUTH],
+)
+async def reset_username(
+    # reset_schema: ResetUsernameSchema,
+    # access_token: AuthorizationHeader,
+):
+    pass
+
+
+@auth_router.post(
+    '/reset/password',
+    status_code=status.HTTP_200_OK,
+    summary='Поменять пароль пользователя',
+    # response_model=ResetPasswordResponseSchema,
+    tags=[ApiTags.V1_AUTH],
+)
+async def reset_password(
+    # reset_schema: ResetPasswordSchema,
+    # access_token: AuthorizationHeader,
+):
+    pass
+
+
+@auth_router.get(
+    '/history',
+    status_code=status.HTTP_200_OK,
+    summary='Получить историю входов пользователя',
+    # response_model=ResetPasswordResponseSchema,
+    tags=[ApiTags.V1_AUTH],
+)
+async def get_history(
+    # access_token: AuthorizationHeader,
+):
+    pass
