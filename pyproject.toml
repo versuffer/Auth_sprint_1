@@ -1,0 +1,51 @@
+[tool.poetry]
+name = "auth-sprint-1"
+version = "1.0.0"
+description = ""
+authors = ["Носов Сергей Олегович <SONosov@datafort.ru>"]
+readme = "README.md"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.dependencies]
+python = "~3.11.9"
+fastapi = "0.111.0"
+uvicorn = "0.30.1"
+gunicorn = "22.0.0"
+redis = "5.0.5"
+pydantic = "2.7.3"
+pydantic-settings = "2.3.1"
+sqlalchemy = "2.0.30"
+alembic = "1.13.1"
+cryptography = "42.0.8"
+pyjwt = "2.8.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+isort = "*"
+black = "*"
+flake8 = "*"
+flake8-pyproject = "*"
+bandit = "*"
+mypy = "*"
+types-redis = "*"
+
+[tool.isort]
+profile = 'black'
+
+[tool.black]
+line-length = 120
+skip-string-normalization = true
+
+[tool.flake8]
+exclude = [".git", "__pycache__"]
+max-line-length = 120
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+plugins = [
+    "pydantic.mypy"
+]
