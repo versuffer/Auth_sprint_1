@@ -12,7 +12,7 @@ class Base(DeclarativeBase):
     type_annotation_map = {
         datetime: TIMESTAMP(timezone=True),
     }
-    id: Mapped[UUID] = mapped_column(primary_key=True, server_default=func.uuid_generate_v4())
+    id: Mapped[UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
     created_by: Mapped[text | None]
     created_at: Mapped[datetime] = mapped_column(server_default=func.current_timestamp())
     updated_by: Mapped[text | None]
