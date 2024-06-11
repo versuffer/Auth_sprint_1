@@ -1,6 +1,12 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.docs.tags import ApiTags
+from app.exceptions import UserAlreadyExistError
+from app.schemas.api.v1.auth_schemas import (
+    RegisterResponseSchema,
+    UserCredentialsSchema,
+)
+from app.services.auth.registration_service import RegistrationService
 
 auth_router = APIRouter(prefix='/auth')
 
@@ -9,13 +15,19 @@ auth_router = APIRouter(prefix='/auth')
     '/register',
     status_code=status.HTTP_201_CREATED,
     summary='Зарегистрировать пользователя',
-    # response_model=RegisterResponseSchema,
+    response_model=RegisterResponseSchema,
     tags=[ApiTags.V1_AUTH],
 )
 async def register(
-    # user_credentials: UserCredentialsSchema,
+    user_credentials: UserCredentialsSchema,
+    service: RegistrationService = Depends(),
 ):
-    pass
+    try:
+        if user := await service.create_user(user_credentials):
+            return user
+    except UserAlreadyExistError:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT)
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @auth_router.post(
