@@ -16,6 +16,7 @@ from app.services.utils.password_service import password_service
 
 class AuthenticationService:
     def __init__(self):
+        self.password_service = password_service
         self.user_service = UserService()
         self.session_service = SessionsService()
         self.user: UserDBSchema | None = None
@@ -24,7 +25,7 @@ class AuthenticationService:
         user = await self.user_service.get_user(user_credentials.login)
         if not user:
             raise UserNotFoundError
-        if not password_service.verify_password(user.hashed_password, user_credentials.password):
+        if not self.password_service.verify_password(user.hashed_password, user_credentials.password):
             raise WrongPasswordError
         tokens = await self.session_service.get_tokens(UserTokensCredentialsSchema(login=user.login, roles=user.roles))
         await self.user_service.save_history(
