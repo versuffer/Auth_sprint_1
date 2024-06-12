@@ -9,6 +9,12 @@ class UserCredentialsSchema(BaseModel):
     password: str
 
 
+class UserNewSchema(BaseModel):
+    login: str
+    hashed_password: str
+    dynamic_salt: str
+
+
 class UserLoginCredentialsSchema(UserCredentialsSchema):
     user_agent: str  # TODO правильно доставать юзер агент
 

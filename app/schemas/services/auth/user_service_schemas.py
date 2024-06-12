@@ -15,3 +15,4 @@ class UserDBSchema(BaseModel):
     dynamic_salt: str
     roles: list[str]
     id: uuid.UUID
+    is_super_user: bool
