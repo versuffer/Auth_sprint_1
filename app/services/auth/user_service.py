@@ -30,7 +30,7 @@ class UserService:
 
     async def create(self, user_data: UserNewSchema) -> UserCreatedSchema:
         user_db = await self.user_repository.create(user_data)
-        return UserCreatedSchema(id=user_db.id, login=user_db.login, is_super_user=user_db.is_super_user)
+        return UserCreatedSchema(id=user_db.id, login=user_db.login, is_superuser=user_db.is_superuser)
 
     async def get_user(self, login: str) -> UserDBSchema:
         return await self.user_repository.get_user_by_login(login)
@@ -38,6 +38,6 @@ class UserService:
     async def save_history(self, history_data: HistorySchema) -> None:
         await self.history_repository.create(history_data)
 
-    async def check_is_super_user(self, login: str) -> bool:
+    async def check_is_superuser(self, login: str) -> bool:
         user = await self.user_repository.get_user_by_login(login)
-        return user.is_super_user
+        return user.is_superuser

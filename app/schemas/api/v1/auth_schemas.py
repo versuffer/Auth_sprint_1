@@ -37,7 +37,7 @@ class UserTokensSchema(BaseModel):
 class RegisterResponseSchema(BaseModel):
     id: uuid.UUID
     login: str
-    is_super_user: bool
+    is_superuser: bool
 
 
 class HistorySchema(BaseModel):
