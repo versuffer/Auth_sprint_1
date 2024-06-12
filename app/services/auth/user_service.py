@@ -37,3 +37,7 @@ class UserService:
 
     async def save_history(self, history_data: HistorySchema) -> None:
         await self.history_repository.create(history_data)
+
+    async def check_is_super_user(self, login: str) -> bool:
+        user = await self.user_repository.get_user_by_login(login)
+        return user.is_super_user
