@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.docs.tags import ApiTags
-from app.exceptions import UserAlreadyExistError, WrongPasswordError, UserNotFoundError
+from app.exceptions import UserAlreadyExistError, UserNotFoundError, WrongPasswordError
 from app.schemas.api.v1.auth_schemas import (
     RegisterResponseSchema,
-    UserCredentialsSchema, UserLoginCredentialsSchema, UserTokensSchema, UserRefreshCredentialsSchema,
+    UserCredentialsSchema,
+    UserLoginCredentialsSchema,
+    UserRefreshCredentialsSchema,
+    UserTokensSchema,
 )
 from app.services.auth.auth_service import AuthenticationService
 from app.services.auth.registration_service import RegistrationService

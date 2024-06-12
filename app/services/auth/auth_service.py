@@ -1,8 +1,13 @@
 import datetime
 
-from app.exceptions import WrongPasswordError, UserNotFoundError
-from app.schemas.api.v1.auth_schemas import UserLoginCredentialsSchema, UserTokensCredentialsSchema, UserTokensSchema, \
-    HistorySchema, UserRefreshCredentialsSchema
+from app.exceptions import UserNotFoundError, WrongPasswordError
+from app.schemas.api.v1.auth_schemas import (
+    HistorySchema,
+    UserLoginCredentialsSchema,
+    UserRefreshCredentialsSchema,
+    UserTokensCredentialsSchema,
+    UserTokensSchema,
+)
 from app.schemas.services.auth.user_service_schemas import UserDBSchema
 from app.services.auth.token_service import TokenService
 from app.services.auth.user_service import UserService

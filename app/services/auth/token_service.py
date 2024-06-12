@@ -1,4 +1,7 @@
-from app.schemas.api.v1.auth_schemas import UserTokensCredentialsSchema, UserTokensSchema
+from app.schemas.api.v1.auth_schemas import (
+    UserTokensCredentialsSchema,
+    UserTokensSchema,
+)
 
 
 class TokenService:
