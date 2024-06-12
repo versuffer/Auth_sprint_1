@@ -1,3 +1,4 @@
+import datetime
 import uuid
 
 from pydantic import BaseModel
@@ -8,7 +9,32 @@ class UserCredentialsSchema(BaseModel):
     password: str
 
 
+class UserLoginCredentialsSchema(UserCredentialsSchema):
+    user_agent: str  # TODO правильно доставать юзер агент
+
+
+class UserRefreshCredentialsSchema(BaseModel):
+    refresh_token: str
+    user_agent: str
+
+
+class UserTokensCredentialsSchema(BaseModel):
+    login: str
+    roles: list[str]
+
+
+class UserTokensSchema(BaseModel):
+    refresh_token: str
+    access_token: str
+
+
 class RegisterResponseSchema(BaseModel):
     id: uuid.UUID
     login: str
     is_super_user: bool
+
+
+class HistorySchema(BaseModel):
+    id: uuid.UUID
+    auth_date: datetime.datetime
+    user_agent: str
