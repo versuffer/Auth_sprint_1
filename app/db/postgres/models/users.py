@@ -14,7 +14,6 @@ class UserModel(Base):
     username: Mapped[text] = mapped_column(nullable=False, unique=True)
     email: Mapped[text] = mapped_column(nullable=False, unique=True)
     hashed_password: Mapped[text] = mapped_column(nullable=False)
-    dynamic_salt: Mapped[text] = mapped_column(nullable=False)
     is_superuser: Mapped[bool] = mapped_column(nullable=False, server_default=expression.false())
 
     # one-to-many

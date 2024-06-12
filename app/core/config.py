@@ -16,10 +16,10 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = 'INFO'
 
     # Auth
-    SECRET_KEY: SecretStr
-    ALGORITHM: str = 'HS256'
-    ACCESS_TOKEN_EXPIRE_TIME_SECONDS: int = 60 * 5  # 5 minutes
-    REFRESH_TOKEN_EXPIRE_TIME_SECONDS: int = 86400 * 7  # 7 days
+    JWT_SECRET_KEY: SecretStr
+    JWT_ALGORITHM: str = 'HS256'
+    JWT_ACCESS_TOKEN_EXPIRE_TIME_SECONDS: int = 60 * 60  # 1 hour
+    JWT_REFRESH_TOKEN_EXPIRE_TIME_SECONDS: int = 86400 * 30  # 30 days
 
     # Postgres
     POSTGRES_HOST: str

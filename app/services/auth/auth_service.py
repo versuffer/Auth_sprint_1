@@ -11,12 +11,11 @@ from app.schemas.api.v1.auth_schemas import (
 from app.schemas.services.auth.user_service_schemas import UserDBSchema
 from app.services.auth.session_service import SessionsService
 from app.services.auth.user_service import UserService
-from app.services.utils.hash_service import HashService
+from app.services.utils.password_service import password_service
 
 
 class AuthenticationService:
     def __init__(self):
-        self.hash_service = HashService()
         self.user_service = UserService()
         self.session_service = SessionsService()
         self.user: UserDBSchema | None = None
@@ -25,8 +24,7 @@ class AuthenticationService:
         user = await self.user_service.get_user(user_credentials.login)
         if not user:
             raise UserNotFoundError
-        hashed_password = await self.hash_service.get_hashed_password(user_credentials.password, user.dynamic_salt)
-        if hashed_password != user.hashed_password:
+        if not password_service.verify_password(user.hashed_password, user_credentials.password):
             raise WrongPasswordError
         tokens = await self.session_service.get_tokens(UserTokensCredentialsSchema(login=user.login, roles=user.roles))
         await self.user_service.save_history(
