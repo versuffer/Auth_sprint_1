@@ -12,7 +12,6 @@ class UserCredentialsSchema(BaseModel):
 class UserNewSchema(BaseModel):
     login: str
     hashed_password: str
-    dynamic_salt: str
 
 
 class UserLoginCredentialsSchema(UserCredentialsSchema):
