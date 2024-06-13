@@ -1,6 +1,16 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.docs.tags import ApiTags
+from app.exceptions import UserAlreadyExistError, UserNotFoundError, WrongPasswordError
+from app.schemas.api.v1.auth_schemas import (
+    RegisterResponseSchema,
+    UserCredentialsSchema,
+    UserLoginCredentialsSchema,
+    UserRefreshCredentialsSchema,
+    UserTokensSchema,
+)
+from app.services.auth.auth_service import AuthenticationService
+from app.services.auth.registration_service import RegistrationService
 
 auth_router = APIRouter(prefix='/auth')
 
@@ -9,52 +19,85 @@ auth_router = APIRouter(prefix='/auth')
     '/register',
     status_code=status.HTTP_201_CREATED,
     summary='Зарегистрировать пользователя',
-    # response_model=RegisterResponseSchema,
+    response_model=RegisterResponseSchema,
     tags=[ApiTags.V1_AUTH],
 )
 async def register(
-    # user_credentials: UserCredentialsSchema,
+    user_credentials: UserCredentialsSchema,
+    service: RegistrationService = Depends(),
 ):
-    pass
+    try:
+        if user := await service.create_user(user_credentials):
+            return user
+    except UserAlreadyExistError:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT)
 
 
 @auth_router.post(
     '/login',
     status_code=status.HTTP_200_OK,
     summary='Аутентифицировать пользователя по логину и паролю',
-    # response_model=LoginResponseSchema,
+    response_model=UserTokensSchema,
     tags=[ApiTags.V1_AUTH],
 )
 async def login(
-    # user_credentials: UserCredentialsSchema,
+    user_credentials: UserLoginCredentialsSchema,
+    service: AuthenticationService = Depends(),
 ):
-    pass
+    try:
+        return await service.get_tokens_by_login(user_credentials)
+    except WrongPasswordError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Неверный пароль')
+    except UserNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователя с таким логином не существует.'
+        )
 
 
 @auth_router.post(
     '/refresh',
     status_code=status.HTTP_200_OK,
     summary='Аутентифицировать пользователя по refresh-токену',
-    # response_model=RefreshResponseSchema,
+    response_model=UserTokensSchema,
     tags=[ApiTags.V1_AUTH],
 )
 async def refresh(
-    # refresh_token: AuthorizationHeader,
+    user_credentials: UserRefreshCredentialsSchema,
+    service: AuthenticationService = Depends(),
 ):
-    pass
+    try:
+        return await service.get_tokens_by_refresh_token(user_credentials)
+    except UserNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователя с таким логином не существует.'
+        )
 
 
 @auth_router.post(
     '/logout',
     status_code=status.HTTP_200_OK,
     summary='Инвалидировать сессию пользователя по access-токену',
-    # response_model=LogoutResponseSchema,
     tags=[ApiTags.V1_AUTH],
 )
 async def logout(
-    # access_token: AuthorizationHeader,
+    access_token: str,  # TODO
+    service: AuthenticationService = Depends(),
 ):
-    pass
+    return await service.logout(access_token)
+
+
+@auth_router.post(
+    '/check_access_token',
+    status_code=status.HTTP_200_OK,
+    summary='Проверить пользователя по access-токену',
+    tags=[ApiTags.V1_AUTH],
+)
+async def check_access_token(
+    access_token: str,  # TODO
+    service: AuthenticationService = Depends(),
+):
+    if not service.check_access_token(access_token):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
 
 @auth_router.post(
