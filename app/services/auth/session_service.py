@@ -1,67 +1,65 @@
 import uuid
+from datetime import datetime
 
-from app.schemas.api.v1.auth_schemas import (
-    UserTokensCredentialsSchema,
-    UserTokensSchema,
-)
-
-
-class JWTService:
-    async def get_tokens(
-        self, user_credentials: UserTokensCredentialsSchema, session_id: uuid.UUID
-    ) -> UserTokensSchema:
-        pass
-
-    async def get_login(self, token: str) -> str:
-        pass
-
-    async def get_session_id(self, token: str) -> uuid.UUID:
-        pass
-
-    async def check_token(self, token: str) -> bool:
-        pass
+from app.exceptions import RefreshTokenValidationError
+from app.schemas.api.v1.auth_schemas import UserTokenDataSchema, UserTokensSchema
+from app.services.utils.jwt_service import jwt_service
 
 
 class RedisRepository:
-    async def save_token(self, token: str) -> None:
-        pass
-
     async def save_session(self, login: str, session_id: uuid.UUID) -> None:
-        pass
-
-    async def delete_token(self, token: str) -> None:
         pass
 
     async def delete_session(self, session_id: uuid.UUID) -> None:
         pass
 
 
-class SessionsService:
+class SessionService:
     def __init__(self):
-        self.jwt_service = JWTService()
+        self.jwt_service = jwt_service
         self.redis_repo = RedisRepository()
 
-    async def get_tokens(self, user_credentials: UserTokensCredentialsSchema) -> UserTokensSchema:
+    async def create_token_pair(self, user_token_data: UserTokenDataSchema) -> UserTokensSchema:
+        user_login = user_token_data.login
         session_id = uuid.uuid4()
-        tokens = await self.jwt_service.get_tokens(user_credentials, session_id)
-        await self.redis_repo.save_token(tokens.refresh_token)
-        await self.redis_repo.save_session(user_credentials.login, session_id=session_id)
-        return tokens
+        base_expire_time = datetime.utcnow()
+        base_token_payload = {'session_id': str(session_id)}
 
-    async def get_login_from_token(self, token: str) -> str:
-        return await self.jwt_service.get_login(token)
+        access_token_payload = user_token_data.model_dump()
+        access_token_payload |= base_token_payload
+        access_token = self.jwt_service.create_access_token(
+            payload=access_token_payload, base_expire_time=base_expire_time
+        )
 
-    async def delete_session(self, access_token: str) -> None:
-        session_id = await self.jwt_service.get_session_id(access_token)
-        await self.redis_repo.delete_session(session_id)
-        await self.redis_repo.delete_token(access_token)
+        refresh_token_payload = {'login': user_login}
+        refresh_token_payload |= base_token_payload
+        refresh_token = self.jwt_service.create_refresh_token(
+            payload=refresh_token_payload, base_expire_time=base_expire_time
+        )
+
+        await self.redis_repo.save_session(user_login, session_id=session_id)
+        return UserTokensSchema(access_token=access_token, refresh_token=refresh_token)
+
+    async def get_login_from_refresh_token(self, refresh_token: str) -> str | None:
+        token_payload = self.jwt_service.get_token_payload(token=refresh_token)
+        if token_payload and token_payload.get('refresh') is True:
+            if login := token_payload.get('login'):
+                return login
+
+            raise RefreshTokenValidationError
+
+        # TODO вместо return None нужно рейзить кастомную ошибку
         return None
 
-    async def check_access_token(self, access_token: str) -> bool:
-        is_token_valid = await self.jwt_service.check_token(access_token)
-        if not is_token_valid:
-            return False
-        session_id = await self.jwt_service.get_session_id(access_token)
-        if not session_id:
-            return False
-        return True
+    def verify_access_token(self, access_token: str) -> bool:
+        token_payload = self.jwt_service.get_token_payload(token=access_token)
+        if token_payload and 'refresh' not in token_payload:
+            return True
+        return False
+
+    async def delete_session(self, access_token: str) -> str:
+        token_payload = self.jwt_service.get_token_payload(token=access_token, verify_exp=False)
+        if session_id := token_payload.get('session_id'):
+            await self.redis_repo.delete_session(session_id)
+
+        return session_id

@@ -8,3 +8,7 @@ class UserNotFoundError(Exception):
 
 class WrongPasswordError(Exception):
     pass
+
+
+class RefreshTokenValidationError(Exception):
+    pass

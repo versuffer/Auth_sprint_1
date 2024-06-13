@@ -35,7 +35,7 @@ class UserService:
     async def get_user(self, login: str) -> UserDBSchema:
         return await self.user_repository.get_user_by_login(login)
 
-    async def save_history(self, history_data: HistorySchema) -> None:
+    async def save_login_history(self, history_data: HistorySchema) -> None:
         await self.history_repository.create(history_data)
 
     async def check_is_superuser(self, login: str) -> bool:

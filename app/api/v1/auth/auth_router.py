@@ -3,10 +3,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.api.docs.tags import ApiTags
 from app.exceptions import UserAlreadyExistError, UserNotFoundError, WrongPasswordError
 from app.schemas.api.v1.auth_schemas import (
+    CredentialsLoginDataSchema,
+    RefreshLoginDataSchema,
     RegisterResponseSchema,
     UserCredentialsSchema,
-    UserLoginCredentialsSchema,
-    UserRefreshCredentialsSchema,
     UserTokensSchema,
 )
 from app.services.auth.auth_service import AuthenticationService
@@ -41,11 +41,11 @@ async def register(
     tags=[ApiTags.V1_AUTH],
 )
 async def login(
-    user_credentials: UserLoginCredentialsSchema,
+    user_credentials: CredentialsLoginDataSchema,
     service: AuthenticationService = Depends(),
 ):
     try:
-        return await service.get_tokens_by_login(user_credentials)
+        return await service.authenticate_by_credentials(user_credentials)
     except WrongPasswordError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Неверный пароль')
     except UserNotFoundError:
@@ -62,11 +62,11 @@ async def login(
     tags=[ApiTags.V1_AUTH],
 )
 async def refresh(
-    user_credentials: UserRefreshCredentialsSchema,
+    user_credentials: RefreshLoginDataSchema,
     service: AuthenticationService = Depends(),
 ):
     try:
-        return await service.get_tokens_by_refresh_token(user_credentials)
+        return await service.authenticate_by_refresh_token(user_credentials)
     except UserNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователя с таким логином не существует.'
@@ -83,21 +83,21 @@ async def logout(
     access_token: str,  # TODO
     service: AuthenticationService = Depends(),
 ):
-    return await service.logout(access_token)
+    return {'session_id': await service.logout(access_token)}
 
 
 @auth_router.post(
-    '/check_access_token',
+    '/verify_access_token',
     status_code=status.HTTP_200_OK,
     summary='Проверить пользователя по access-токену',
     tags=[ApiTags.V1_AUTH],
 )
-async def check_access_token(
+async def verify_access_token(
     access_token: str,  # TODO
     service: AuthenticationService = Depends(),
 ):
-    if not service.check_access_token(access_token):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    if not service.verify_access_token(access_token):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
 
 @auth_router.post(
