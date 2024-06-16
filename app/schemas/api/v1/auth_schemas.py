@@ -54,3 +54,8 @@ class HistorySchema(BaseModel):
     id: uuid.UUID
     auth_date: datetime.datetime
     user_agent: str
+
+
+class UserHistoryResponseSchema(BaseModel):
+    user_id: uuid.UUID
+    user_history: list[HistorySchema]

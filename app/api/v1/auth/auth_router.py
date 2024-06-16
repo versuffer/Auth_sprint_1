@@ -7,7 +7,7 @@ from app.schemas.api.v1.auth_schemas import (
     UserCredentialsSchema,
     UserLoginCredentialsSchema,
     UserRefreshCredentialsSchema,
-    UserTokensSchema, ResetUsernameSchema, UserNewSchema, ResetPasswordSchema,
+    UserTokensSchema, ResetUsernameSchema, UserNewSchema, ResetPasswordSchema, UserHistoryResponseSchema,
 )
 from app.services.auth.auth_service import AuthenticationService
 from app.services.auth.registration_service import RegistrationService
@@ -145,10 +145,16 @@ async def reset_password(
     '/history',
     status_code=status.HTTP_200_OK,
     summary='Получить историю входов пользователя',
-    # response_model=ResetPasswordResponseSchema,
+    response_model=UserHistoryResponseSchema,
     tags=[ApiTags.V1_AUTH],
 )
 async def get_history(
-    # access_token: AuthorizationHeader,
+    access_token: str,
+    service: AuthenticationService = Depends()
 ):
-    pass
+    try:
+        return await service.get_history(access_token)
+    except UserNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователя не существует.'
+        )

@@ -1,6 +1,6 @@
 import uuid
 
-from app.schemas.api.v1.auth_schemas import HistorySchema, UserNewSchema
+from app.schemas.api.v1.auth_schemas import HistorySchema, UserNewSchema, UserHistoryResponseSchema
 from app.schemas.services.auth.user_service_schemas import (
     UserCreatedSchema,
     UserDBSchema,
@@ -31,6 +31,9 @@ class HistoryRepository:
     async def create(self, history_data: HistorySchema) -> None:
         pass
 
+    async def get(self, user_id: uuid.UUID) -> UserHistoryResponseSchema:
+        pass
+
 
 class UserService:
     def __init__(self):
@@ -51,6 +54,9 @@ class UserService:
 
     async def save_history(self, history_data: HistorySchema) -> None:
         await self.history_repository.create(history_data)
+
+    async def get_history(self, user_id: uuid.UUID) -> UserHistoryResponseSchema:
+        return await self.history_repository.get(user_id)
 
     async def check_is_superuser(self, login: str) -> bool:
         user = await self.user_repository.get_user_by_login(login)
