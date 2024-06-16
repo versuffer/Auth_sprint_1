@@ -1,9 +1,9 @@
 import uuid
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict
 
 from app.schemas.api.v1.auth_schemas import RegisterResponseSchema
-from app.schemas.api.v1.roles_schemas import RolesSchema, RoleSchema
+from app.schemas.api.v1.roles_schemas import RoleSchema
 
 
 class UserCreatedSchema(RegisterResponseSchema):

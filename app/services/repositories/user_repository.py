@@ -1,8 +1,7 @@
-from typing import Sequence
-from uuid import UUID
 import re
+from uuid import UUID
 
-from sqlalchemy import delete, select, update, and_
+from sqlalchemy import and_, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -74,10 +73,7 @@ class UserRepository:
     async def delete_user_role(self, user_id: UUID, role_id: UUID) -> UserDBSchema | None:
         try:
             query = delete(UserRoleAssociationModel).where(
-                and_(
-                    UserRoleAssociationModel.user_id == user_id,
-                    UserRoleAssociationModel.role_id == role_id
-                )
+                and_(UserRoleAssociationModel.user_id == user_id, UserRoleAssociationModel.role_id == role_id)
             )
             await self.session.execute(query)
             await self.session.commit()

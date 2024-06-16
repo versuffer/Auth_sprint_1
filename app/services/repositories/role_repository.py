@@ -1,14 +1,15 @@
+from typing import Sequence
 from uuid import UUID
 
-from app.db.postgres.models.users import RoleModel
-from sqlalchemy import select, update, delete
-from typing import Sequence
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.logs import logger
+from app.db.postgres.models.users import RoleModel
 from app.schemas.api.v1.roles_schemas import RoleSchema
 
 
-class RoleRepository():
+class RoleRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
@@ -43,6 +44,7 @@ class RoleRepository():
             await self.session.commit()
         except Exception as err:
             await self.session.rollback()
+            logger.error(err)
             return None
         return await self.get(role.id)
 
@@ -53,6 +55,7 @@ class RoleRepository():
             await self.session.commit()
         except Exception as err:
             await self.session.rollback()
+            logger.error(err)
             return None
         return await self.get(role_id)
 
@@ -66,4 +69,5 @@ class RoleRepository():
                 return True
         except Exception as err:
             await self.session.rollback()
+            logger.error(err)
             return False
