@@ -7,7 +7,7 @@ from app.schemas.api.v1.auth_schemas import (
     UserCredentialsSchema,
     UserLoginCredentialsSchema,
     UserRefreshCredentialsSchema,
-    UserTokensSchema, ResetUsernameSchema, UserNewSchema,
+    UserTokensSchema, ResetUsernameSchema, UserNewSchema, ResetPasswordSchema,
 )
 from app.services.auth.auth_service import AuthenticationService
 from app.services.auth.registration_service import RegistrationService
@@ -110,7 +110,7 @@ async def check_access_token(
 )
 async def reset_username(
     reset_schema: ResetUsernameSchema,
-    service: UserChangesService = Depends()
+    service: UserChangesService = Depends(),
     # access_token: AuthorizationHeader,
 ):
     try:
@@ -125,14 +125,20 @@ async def reset_username(
     '/reset/password',
     status_code=status.HTTP_200_OK,
     summary='Поменять пароль пользователя',
-    # response_model=ResetPasswordResponseSchema,
+    response_model=UserNewSchema,
     tags=[ApiTags.V1_AUTH],
 )
 async def reset_password(
-    # reset_schema: ResetPasswordSchema,
+    reset_schema: ResetPasswordSchema,
     # access_token: AuthorizationHeader,
+    service: UserChangesService = Depends(),
 ):
-    pass
+    try:
+        return await service.reset_password(reset_schema)
+    except UserNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователя с таким логином и паролем не существует.'
+        )
 
 
 @auth_router.get(

@@ -38,6 +38,12 @@ class ResetUsernameSchema(BaseModel):
     new_username: str
 
 
+class ResetPasswordSchema(BaseModel):
+    login: str
+    current_password: str
+    new_password: str
+
+
 class RegisterResponseSchema(BaseModel):
     id: uuid.UUID
     login: str

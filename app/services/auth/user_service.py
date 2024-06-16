@@ -1,3 +1,5 @@
+import uuid
+
 from app.schemas.api.v1.auth_schemas import HistorySchema, UserNewSchema
 from app.schemas.services.auth.user_service_schemas import (
     UserCreatedSchema,
@@ -12,7 +14,7 @@ class UserRepository:
     async def create(self, user_data: UserNewSchema) -> UserDBSchema:
         pass
 
-    async def change_username(self, old_username: str, new_username: str) -> UserDBSchema:
+    async def update(self, user_id: uuid.UUID, fields: dict) -> UserDBSchema:
         pass
 
 
@@ -45,6 +47,10 @@ class UserService:
         user = await self.user_repository.get_user_by_login(login)
         return user.is_superuser
 
-    async def reset_username(self, old_username: str, new_username: str) -> UserNewSchema:
-        user = await self.user_repository.change_username(old_username, new_username)
+    async def set_username(self, user_id: uuid.UUID, new_username: str) -> UserNewSchema:
+        user = await self.user_repository.update(user_id, {'login': new_username})
+        return UserNewSchema(login=user.login, hashed_password=user.hashed_password)
+
+    async def set_password(self, user_id: uuid.UUID, new_password: str) -> UserNewSchema:
+        user = await self.user_repository.update(user_id, {'hashed_password': new_password})
         return UserNewSchema(login=user.login, hashed_password=user.hashed_password)
