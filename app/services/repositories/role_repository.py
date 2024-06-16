@@ -1,14 +1,14 @@
+from typing import Sequence
 from uuid import UUID
 
-from app.db.postgres.models.users import RoleModel
-from sqlalchemy import select, update, delete
-from typing import Sequence
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db.postgres.models.users import RoleModel
 from app.schemas.api.v1.roles_schemas import RoleSchema
 
 
-class RoleRepository():
+class RoleRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
