@@ -1,9 +1,11 @@
 import uuid
 
+from app.db.redis.redis_repo import RedisRepository
 from app.schemas.api.v1.auth_schemas import (
     UserTokensCredentialsSchema,
     UserTokensSchema,
 )
+from app.core.config import app_settings
 
 
 class JWTService:
@@ -22,29 +24,14 @@ class JWTService:
         pass
 
 
-class RedisRepository:
-    async def save_token(self, token: str) -> None:
-        pass
-
-    async def save_session(self, login: str, session_id: uuid.UUID) -> None:
-        pass
-
-    async def delete_token(self, token: str) -> None:
-        pass
-
-    async def delete_session(self, session_id: uuid.UUID) -> None:
-        pass
-
-
 class SessionsService:
     def __init__(self):
         self.jwt_service = JWTService()
-        self.redis_repo = RedisRepository()
+        self.redis_repo = RedisRepository(app_settings.REDIS_DSN)
 
     async def get_tokens(self, user_credentials: UserTokensCredentialsSchema) -> UserTokensSchema:
         session_id = uuid.uuid4()
         tokens = await self.jwt_service.get_tokens(user_credentials, session_id)
-        await self.redis_repo.save_token(tokens.refresh_token)
         await self.redis_repo.save_session(user_credentials.login, session_id=session_id)
         return tokens
 
@@ -54,7 +41,6 @@ class SessionsService:
     async def delete_session(self, access_token: str) -> None:
         session_id = await self.jwt_service.get_session_id(access_token)
         await self.redis_repo.delete_session(session_id)
-        await self.redis_repo.delete_token(access_token)
         return None
 
     async def check_access_token(self, access_token: str) -> bool:
