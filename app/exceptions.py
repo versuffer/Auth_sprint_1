@@ -12,3 +12,11 @@ class RoleNotFoundError(Exception):
 
 class WrongPasswordError(Exception):
     pass
+
+
+class RoleAlreadyExist(Exception):
+    pass
+
+
+class UserAlreadyExist(Exception):
+    pass
