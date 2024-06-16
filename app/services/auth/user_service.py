@@ -11,10 +11,19 @@ class UserRepository:
     async def get_user_by_login(self, login: str) -> UserDBSchema:
         pass
 
+    async def get(self, user_id: uuid.UUID) -> UserDBSchema:
+        pass
+
     async def create(self, user_data: UserNewSchema) -> UserDBSchema:
         pass
 
     async def update(self, user_id: uuid.UUID, fields: dict) -> UserDBSchema:
+        pass
+
+    async def add_user_role(self, user_id: uuid.UUID, role_id: uuid.UUID) -> UserDBSchema:
+        pass
+
+    async def delete_user_role(self, user_id: uuid.UUID, role_id: uuid.UUID) -> UserDBSchema:
         pass
 
 

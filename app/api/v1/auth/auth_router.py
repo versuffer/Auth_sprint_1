@@ -11,7 +11,7 @@ from app.schemas.api.v1.auth_schemas import (
 )
 from app.services.auth.auth_service import AuthenticationService
 from app.services.auth.registration_service import RegistrationService
-from app.services.auth.user_changes_service import UserChangesService
+from app.services.auth.user_public_service import UserPublicService
 
 auth_router = APIRouter(prefix='/auth')
 
@@ -110,7 +110,7 @@ async def check_access_token(
 )
 async def reset_username(
     reset_schema: ResetUsernameSchema,
-    service: UserChangesService = Depends(),
+    service: UserPublicService = Depends(),
     # access_token: AuthorizationHeader,
 ):
     try:
@@ -131,7 +131,7 @@ async def reset_username(
 async def reset_password(
     reset_schema: ResetPasswordSchema,
     # access_token: AuthorizationHeader,
-    service: UserChangesService = Depends(),
+    service: UserPublicService = Depends(),
 ):
     try:
         return await service.reset_password(reset_schema)

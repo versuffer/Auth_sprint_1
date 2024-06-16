@@ -9,7 +9,7 @@ from app.schemas.api.v1.roles_schemas import (
     GetRolesResponseSchema,
     RoleSchema,
 )
-from app.services.auth.role_service import RolesService
+from app.services.auth.role_services import RolesService
 
 roles_router = APIRouter(prefix='/roles')
 
