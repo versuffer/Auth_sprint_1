@@ -4,10 +4,14 @@ from app.api.docs.tags import ApiTags
 from app.exceptions import UserAlreadyExistError, UserNotFoundError, WrongPasswordError
 from app.schemas.api.v1.auth_schemas import (
     RegisterResponseSchema,
+    ResetPasswordSchema,
+    ResetUsernameSchema,
     UserCredentialsSchema,
+    UserHistoryResponseSchema,
     UserLoginCredentialsSchema,
+    UserNewSchema,
     UserRefreshCredentialsSchema,
-    UserTokensSchema, ResetUsernameSchema, UserNewSchema, ResetPasswordSchema, UserHistoryResponseSchema,
+    UserTokensSchema,
 )
 from app.services.auth.auth_service import AuthenticationService
 from app.services.auth.registration_service import RegistrationService
@@ -148,13 +152,8 @@ async def reset_password(
     response_model=UserHistoryResponseSchema,
     tags=[ApiTags.V1_AUTH],
 )
-async def get_history(
-    access_token: str,
-    service: AuthenticationService = Depends()
-):
+async def get_history(access_token: str, service: AuthenticationService = Depends()):
     try:
         return await service.get_history(access_token)
     except UserNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователя не существует.'
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователя не существует.')

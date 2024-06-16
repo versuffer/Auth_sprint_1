@@ -1,9 +1,14 @@
 import uuid
 
-from app.exceptions import UserNotFoundError, RoleNotFoundError
-from app.schemas.api.v1.roles_schemas import RoleSchema, RolesSchema, GetUserRolesResponseSchema, \
-    AssignUserRoleResponseSchema, RevokeUserRoleResponseSchema
-from app.services.auth.user_service import UserService, UserRepository
+from app.exceptions import RoleNotFoundError, UserNotFoundError
+from app.schemas.api.v1.roles_schemas import (
+    AssignUserRoleResponseSchema,
+    GetUserRolesResponseSchema,
+    RevokeUserRoleResponseSchema,
+    RoleSchema,
+    RolesSchema,
+)
+from app.services.auth.user_service import UserRepository, UserService
 
 
 class RolesRepository:

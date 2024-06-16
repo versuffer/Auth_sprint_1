@@ -1,6 +1,10 @@
 import uuid
 
-from app.schemas.api.v1.auth_schemas import HistorySchema, UserNewSchema, UserHistoryResponseSchema
+from app.schemas.api.v1.auth_schemas import (
+    HistorySchema,
+    UserHistoryResponseSchema,
+    UserNewSchema,
+)
 from app.schemas.services.auth.user_service_schemas import (
     UserCreatedSchema,
     UserDBSchema,
