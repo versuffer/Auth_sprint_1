@@ -12,6 +12,9 @@ class UserRepository:
     async def create(self, user_data: UserNewSchema) -> UserDBSchema:
         pass
 
+    async def change_username(self, old_username: str, new_username: str) -> UserDBSchema:
+        pass
+
 
 class HistoryRepository:
     async def create(self, history_data: HistorySchema) -> None:
@@ -41,3 +44,7 @@ class UserService:
     async def check_is_superuser(self, login: str) -> bool:
         user = await self.user_repository.get_user_by_login(login)
         return user.is_superuser
+
+    async def reset_username(self, old_username: str, new_username: str) -> UserNewSchema:
+        user = await self.user_repository.change_username(old_username, new_username)
+        return UserNewSchema(login=user.login, hashed_password=user.hashed_password)

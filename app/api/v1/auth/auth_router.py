@@ -7,10 +7,11 @@ from app.schemas.api.v1.auth_schemas import (
     UserCredentialsSchema,
     UserLoginCredentialsSchema,
     UserRefreshCredentialsSchema,
-    UserTokensSchema,
+    UserTokensSchema, ResetUsernameSchema, UserNewSchema,
 )
 from app.services.auth.auth_service import AuthenticationService
 from app.services.auth.registration_service import RegistrationService
+from app.services.auth.user_changes_service import UserChangesService
 
 auth_router = APIRouter(prefix='/auth')
 
@@ -104,14 +105,20 @@ async def check_access_token(
     '/reset/username',
     status_code=status.HTTP_200_OK,
     summary='Поменять имя пользователя',
-    # response_model=ResetUsernameResponseSchema,
+    response_model=UserNewSchema,
     tags=[ApiTags.V1_AUTH],
 )
 async def reset_username(
-    # reset_schema: ResetUsernameSchema,
+    reset_schema: ResetUsernameSchema,
+    service: UserChangesService = Depends()
     # access_token: AuthorizationHeader,
 ):
-    pass
+    try:
+        return await service.reset_username(reset_schema)
+    except UserNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователя с таким логином не существует.'
+        )
 
 
 @auth_router.post(

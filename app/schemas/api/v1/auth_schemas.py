@@ -33,6 +33,11 @@ class UserTokensSchema(BaseModel):
     access_token: str
 
 
+class ResetUsernameSchema(BaseModel):
+    login: str
+    new_username: str
+
+
 class RegisterResponseSchema(BaseModel):
     id: uuid.UUID
     login: str
