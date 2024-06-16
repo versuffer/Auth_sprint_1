@@ -1,11 +1,11 @@
 import uuid
 
+from app.core.config import app_settings
 from app.db.redis.redis_repo import RedisRepository
 from app.schemas.api.v1.auth_schemas import (
     UserTokensCredentialsSchema,
     UserTokensSchema,
 )
-from app.core.config import app_settings
 
 
 class JWTService:
