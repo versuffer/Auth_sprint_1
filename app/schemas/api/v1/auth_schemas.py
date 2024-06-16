@@ -33,6 +33,17 @@ class UserTokensSchema(BaseModel):
     access_token: str
 
 
+class ResetUsernameSchema(BaseModel):
+    login: str
+    new_username: str
+
+
+class ResetPasswordSchema(BaseModel):
+    login: str
+    current_password: str
+    new_password: str
+
+
 class RegisterResponseSchema(BaseModel):
     id: uuid.UUID
     login: str
@@ -43,3 +54,8 @@ class HistorySchema(BaseModel):
     id: uuid.UUID
     auth_date: datetime.datetime
     user_agent: str
+
+
+class UserHistoryResponseSchema(BaseModel):
+    user_id: uuid.UUID
+    user_history: list[HistorySchema]

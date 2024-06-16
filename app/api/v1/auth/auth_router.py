@@ -4,13 +4,18 @@ from app.api.docs.tags import ApiTags
 from app.exceptions import UserAlreadyExistError, UserNotFoundError, WrongPasswordError
 from app.schemas.api.v1.auth_schemas import (
     RegisterResponseSchema,
+    ResetPasswordSchema,
+    ResetUsernameSchema,
     UserCredentialsSchema,
+    UserHistoryResponseSchema,
     UserLoginCredentialsSchema,
+    UserNewSchema,
     UserRefreshCredentialsSchema,
     UserTokensSchema,
 )
 from app.services.auth.auth_service import AuthenticationService
 from app.services.auth.registration_service import RegistrationService
+from app.services.auth.user_public_service import UserPublicService
 
 auth_router = APIRouter(prefix='/auth')
 
@@ -104,38 +109,51 @@ async def check_access_token(
     '/reset/username',
     status_code=status.HTTP_200_OK,
     summary='Поменять имя пользователя',
-    # response_model=ResetUsernameResponseSchema,
+    response_model=UserNewSchema,
     tags=[ApiTags.V1_AUTH],
 )
 async def reset_username(
-    # reset_schema: ResetUsernameSchema,
+    reset_schema: ResetUsernameSchema,
+    service: UserPublicService = Depends(),
     # access_token: AuthorizationHeader,
 ):
-    pass
+    try:
+        return await service.reset_username(reset_schema)
+    except UserNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователя с таким логином не существует.'
+        )
 
 
 @auth_router.post(
     '/reset/password',
     status_code=status.HTTP_200_OK,
     summary='Поменять пароль пользователя',
-    # response_model=ResetPasswordResponseSchema,
+    response_model=UserNewSchema,
     tags=[ApiTags.V1_AUTH],
 )
 async def reset_password(
-    # reset_schema: ResetPasswordSchema,
+    reset_schema: ResetPasswordSchema,
     # access_token: AuthorizationHeader,
+    service: UserPublicService = Depends(),
 ):
-    pass
+    try:
+        return await service.reset_password(reset_schema)
+    except UserNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователя с таким логином и паролем не существует.'
+        )
 
 
 @auth_router.get(
     '/history',
     status_code=status.HTTP_200_OK,
     summary='Получить историю входов пользователя',
-    # response_model=ResetPasswordResponseSchema,
+    response_model=UserHistoryResponseSchema,
     tags=[ApiTags.V1_AUTH],
 )
-async def get_history(
-    # access_token: AuthorizationHeader,
-):
-    pass
+async def get_history(access_token: str, service: AuthenticationService = Depends()):
+    try:
+        return await service.get_history(access_token)
+    except UserNotFoundError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователя не существует.')
