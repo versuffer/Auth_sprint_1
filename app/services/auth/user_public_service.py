@@ -1,12 +1,9 @@
-import uuid
-
 from app.exceptions import UserNotFoundError, WrongPasswordError
 from app.schemas.api.v1.auth_schemas import (
     ResetPasswordSchema,
     ResetUsernameSchema,
     UserNewSchema,
 )
-from app.schemas.api.v1.roles_schemas import RolesSchema
 from app.services.auth.user_service import UserService
 from app.services.utils.password_service import password_service
 

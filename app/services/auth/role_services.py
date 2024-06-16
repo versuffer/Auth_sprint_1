@@ -8,7 +8,7 @@ from app.schemas.api.v1.roles_schemas import (
     RoleSchema,
     RolesSchema,
 )
-from app.services.auth.user_service import UserRepository, UserService
+from app.services.auth.user_service import UserRepository
 
 
 class RolesRepository:
