@@ -12,7 +12,7 @@ class RoleRepository():
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def _check_exists_role(self, role_id: UUID | None = None, title: str | None = None) -> bool:
+    async def _check_exists_role(self, *, role_id: UUID | None = None, title: str | None = None) -> bool:
         if not role_id and not title:
             raise ValueError("Either 'id' or 'title' must be provided.")
 
@@ -22,17 +22,18 @@ class RoleRepository():
             query = select(RoleModel).where(RoleModel.title == title)
 
         result = await self.session.execute(query)
-        return result.scalars().first() is not None
+        return result.scalar_one_or_none() is not None
 
     async def get_all(self) -> Sequence[RoleSchema]:
         query = select(RoleModel)
         result = await self.session.execute(query)
         return [RoleSchema.model_validate(role_db_obj) for role_db_obj in result.scalars().all()]
 
-    async def get(self, role_id: UUID) -> RoleSchema:
+    async def get(self, role_id: UUID) -> RoleSchema | None:
         query = select(RoleModel).where(RoleModel.id == role_id)
         result = await self.session.execute(query)
-        return RoleSchema.model_validate(result.scalars().first())
+        role = result.scalar_one_or_none()
+        return RoleSchema.model_validate(role) if role else None
 
     async def create(self, title: str, description: str) -> RoleSchema | None:
 
@@ -43,18 +44,17 @@ class RoleRepository():
         except Exception as err:
             await self.session.rollback()
             return None
-        return RoleSchema.validate(role)
+        return await self.get(role.id)
 
     async def update(self, role_id: UUID, data: dict) -> RoleSchema | None:
         query = update(RoleModel).where(RoleModel.id == role_id).values(**data)
         try:
             await self.session.execute(query)
             await self.session.commit()
-            updated_role = await self.session.execute(select(RoleModel).where(RoleModel.id == role_id))
-            return RoleSchema.model_validate(updated_role.scalars().one_or_none())
         except Exception as err:
             await self.session.rollback()
             return None
+        return await self.get(role_id)
 
     async def delete(self, role_id: UUID) -> bool:
         try:

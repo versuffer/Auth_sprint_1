@@ -14,7 +14,6 @@ class UserModel(Base):
     username: Mapped[text] = mapped_column(nullable=False, unique=True)
     email: Mapped[text] = mapped_column(nullable=False, unique=True)
     hashed_password: Mapped[text] = mapped_column(nullable=False)
-    dynamic_salt: Mapped[text] = mapped_column(nullable=False)
     is_superuser: Mapped[bool] = mapped_column(nullable=False, server_default=expression.false())
 
     # one-to-many
@@ -22,7 +21,6 @@ class UserModel(Base):
 
     # many-to-many
     roles: Mapped[list['RoleModel']] = relationship(secondary='user_role_associations', back_populates='users')
-    role_associations: Mapped[list['UserRoleAssociationModel']] = relationship(back_populates='user')
 
 
 class RoleModel(Base):
@@ -33,7 +31,6 @@ class RoleModel(Base):
 
     # many-to-many
     users: Mapped[list['UserModel']] = relationship(secondary='user_role_associations', back_populates='roles')
-    user_associations: Mapped[list['UserRoleAssociationModel']] = relationship(back_populates='role')
 
 
 class HistoryModel(Base):
