@@ -4,6 +4,7 @@ from uuid import UUID
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.logs import logger
 from app.db.postgres.models.users import RoleModel
 from app.schemas.api.v1.roles_schemas import RoleSchema
 
@@ -13,6 +14,7 @@ class RoleRepository:
         self.session = session
 
     async def _check_exists_role(self, role_id: UUID | None = None, title: str | None = None) -> bool:
+
         if not role_id and not title:
             raise ValueError("Either 'id' or 'title' must be provided.")
 
@@ -42,6 +44,7 @@ class RoleRepository:
             await self.session.commit()
         except Exception as err:
             await self.session.rollback()
+            logger.error(err)
             return None
         return RoleSchema.validate(role)
 
@@ -54,6 +57,7 @@ class RoleRepository:
             return RoleSchema.model_validate(updated_role.scalars().one_or_none())
         except Exception as err:
             await self.session.rollback()
+            logger.error(err)
             return None
 
     async def delete(self, role_id: UUID) -> bool:
@@ -66,4 +70,5 @@ class RoleRepository:
                 return True
         except Exception as err:
             await self.session.rollback()
+            logger.error(err)
             return False
