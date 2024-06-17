@@ -1,33 +1,29 @@
-import re
 from uuid import UUID
 
+from pydantic import EmailStr
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logs import logger
 from app.db.postgres.models.users import UserModel, UserRoleAssociationModel
-from app.exceptions import UserAlreadyExist
-from app.schemas.api.v1.auth_schemas import UserNewSchema
-from app.schemas.services.auth.user_service_schemas import UserDBSchema
-from app.services.repositories.postgres_repository import PostgresService
+from app.exceptions import UserAlreadyExistsError
+from app.schemas.services.auth.user_service_schemas import UserCreateSchema
+from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
+from app.services.repositories.postgres_repository import PostgresRepository
 
 
 class UserRepository:
-    def __init__(self, session: AsyncSession):
-        self.db: PostgresService = PostgresService(session)
+    def __init__(self):
+        self.db: PostgresRepository = PostgresRepository()
 
-    def _get_login_type(self, login: str):
-        """Метод проверяет что передано в качестве логина email или username и возвращает необходимое поле для поиска"""
-        email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-        if re.match(email_regex, login):
-            return UserModel.email
-        return UserModel.username
-
-    async def get_user_by_login(self, login: str) -> UserDBSchema:
-        """Возвращает пользователя и сама определяет тип логина email или username"""
-
+    async def get_user_by_email(self, email: EmailStr) -> UserDBSchema | None:
         db_user = await self.db.get_one_obj(
-            UserModel, where_value=[(self._get_login_type(login), login)], select_in_load=UserModel.roles
+            UserModel, where_value=[(UserModel.email, email)], select_in_load=UserModel.roles
+        )
+        return UserDBSchema.model_validate(db_user) if db_user else None
+
+    async def get_user_by_username(self, username: str) -> UserDBSchema | None:
+        db_user = await self.db.get_one_obj(
+            UserModel, where_value=[(UserModel.username, username)], select_in_load=UserModel.roles
         )
         return UserDBSchema.model_validate(db_user) if db_user else None
 
@@ -37,21 +33,23 @@ class UserRepository:
         )
         return UserDBSchema.model_validate(db_user) if db_user else None
 
-    async def create(self, user_data: UserNewSchema) -> UserDBSchema | None:
-        try:
-            user = UserModel(**user_data.model_dump(exclude_none=True))
-            await self.db.create_obj(user)
-            return await self.get(user.id)
-        except IntegrityError:
-            logger.error(UserAlreadyExist('User already exist'))
-            return None
+    async def create(self, user_data: UserCreateSchema) -> UserDBSchema:
+        if user := await self.get_user_by_username(username=user_data.username):
+            raise UserAlreadyExistsError(message=f'User with such username already exists: {user.username}')
+
+        if user := await self.get_user_by_email(email=user_data.email):
+            raise UserAlreadyExistsError(message=f'User with such email already exists: {user.email}')
+
+        user_model = UserModel(**user_data.model_dump())
+        await self.db.create_obj(user_model)
+        return await self.get(user_model.id)
 
     async def update(self, user_id: UUID, data: dict) -> UserDBSchema | None:
         try:
             await self.db.update_obj(UserModel, where_value=[(UserModel.id, user_id)], update_values=data)
             return await self.get(user_id)
         except IntegrityError:
-            logger.error(UserAlreadyExist('User already exist'))
+            # logger.error(UserAlreadyExist('User already exist'))
             return None
 
     async def add_user_role(self, user_id: UUID, role_id: UUID) -> UserDBSchema | None:
@@ -64,7 +62,6 @@ class UserRepository:
             return None
 
     async def delete_user_role(self, user_id: UUID, role_id: UUID) -> UserDBSchema | None:
-
         try:
             await self.db.delete_obj(
                 UserRoleAssociationModel,

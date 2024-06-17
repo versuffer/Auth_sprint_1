@@ -5,9 +5,9 @@ from app.schemas.api.v1.roles_schemas import (
     AssignUserRoleResponseSchema,
     GetUserRolesResponseSchema,
     RevokeUserRoleResponseSchema,
-    RoleSchema,
     RolesSchema,
 )
+from app.schemas.services.auth.role_service_schemas import RoleSchema
 from app.services.auth.user_service import UserRepository
 
 

@@ -1,14 +1,8 @@
 import uuid
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
-
-class RoleSchema(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: uuid.UUID
-    title: str
-    description: str
+from app.schemas.services.auth.role_service_schemas import RoleSchema
 
 
 class RolesSchema(BaseModel):

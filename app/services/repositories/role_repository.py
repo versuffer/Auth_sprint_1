@@ -6,14 +6,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logs import logger
 from app.db.postgres.models.users import RoleModel, UserRoleAssociationModel
-from app.exceptions import RoleAlreadyExist
-from app.schemas.api.v1.roles_schemas import RoleSchema
-from app.services.repositories.postgres_repository import PostgresService
+from app.exceptions import RoleAlreadyExistError
+from app.schemas.services.auth.role_service_schemas import RoleSchema
+from app.services.repositories.postgres_repository import PostgresRepository
 
 
 class RoleRepository:
     def __init__(self, session: AsyncSession):
-        self.db: PostgresService = PostgresService(session)
+        self.db: PostgresRepository = PostgresRepository(session)
 
     async def _check_exists_role(self, *, role_id: UUID | None = None, role_title: str | None = None) -> bool:
         if not role_id and not role_title:
@@ -38,7 +38,7 @@ class RoleRepository:
             await self.db.create_obj(role)
             return await self.get(role.id)
         except IntegrityError:
-            logger.error(RoleAlreadyExist('Role already exist'))
+            logger.error(RoleAlreadyExistError('Role already exist'))
             return None
 
     async def update(self, role_id: UUID, data: dict) -> RoleSchema | None:
@@ -46,7 +46,7 @@ class RoleRepository:
             await self.db.update_obj(RoleModel, where_value=[(RoleModel.id, role_id)], update_values=data)
             return await self.get(role_id)
         except IntegrityError:
-            logger.error(RoleAlreadyExist('Role already exist'))
+            logger.error(RoleAlreadyExistError('Role already exist'))
             return None
 
     async def delete(self, role_id: UUID) -> bool:

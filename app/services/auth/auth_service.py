@@ -9,7 +9,7 @@ from app.schemas.api.v1.auth_schemas import (
     UserTokenDataSchema,
     UserTokensSchema,
 )
-from app.schemas.services.auth.user_service_schemas import UserDBSchema
+from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
 from app.services.auth.session_service import SessionService
 from app.services.auth.user_service import UserService
 from app.services.utils.password_service import password_service

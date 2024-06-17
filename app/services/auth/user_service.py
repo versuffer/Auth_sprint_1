@@ -1,34 +1,14 @@
 import uuid
 
+from app.exceptions import UserAlreadyExistsError
 from app.schemas.api.v1.auth_schemas import (
     HistorySchema,
     UserHistoryResponseSchema,
     UserNewSchema,
 )
-from app.schemas.services.auth.user_service_schemas import (
-    UserCreatedSchema,
-    UserDBSchema,
-)
-
-
-class UserRepository:
-    async def get_user_by_login(self, login: str) -> UserDBSchema:
-        pass
-
-    async def get(self, user_id: uuid.UUID) -> UserDBSchema:
-        pass
-
-    async def create(self, user_data: UserNewSchema) -> UserDBSchema:
-        pass
-
-    async def update(self, user_id: uuid.UUID, fields: dict) -> UserDBSchema:
-        pass
-
-    async def add_user_role(self, user_id: uuid.UUID, role_id: uuid.UUID) -> UserDBSchema:
-        pass
-
-    async def delete_user_role(self, user_id: uuid.UUID, role_id: uuid.UUID) -> UserDBSchema:
-        pass
+from app.schemas.services.auth.user_service_schemas import UserCreateSchema, UserSchema
+from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
+from app.services.repositories.user_repository import UserRepository
 
 
 class HistoryRepository:
@@ -44,14 +24,12 @@ class UserService:
         self.user_repository = UserRepository()
         self.history_repository = HistoryRepository()
 
-    async def is_user_exist(self, login) -> bool:
-        if await self.user_repository.get_user_by_login(login):
-            return True
-        return False
-
-    async def create(self, user_data: UserNewSchema) -> UserCreatedSchema:
-        user_db = await self.user_repository.create(user_data)
-        return UserCreatedSchema(id=user_db.id, login=user_db.login, is_superuser=user_db.is_superuser)
+    async def create(self, user_data: UserCreateSchema) -> UserSchema:
+        try:
+            user_db_schema = await self.user_repository.create(user_data)
+            return UserSchema(**user_db_schema.model_dump())
+        except UserAlreadyExistsError as err:
+            raise err
 
     async def get_user(self, login: str) -> UserDBSchema:
         return await self.user_repository.get_user_by_login(login)

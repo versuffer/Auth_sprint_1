@@ -1,7 +1,7 @@
 import datetime
 import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 class UserCredentialsSchema(BaseModel):
@@ -9,8 +9,13 @@ class UserCredentialsSchema(BaseModel):
     password: str
 
 
-class UserNewSchema(BaseModel):
+class RegisterUserCredentialsSchema(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
 
+
+class UserNewSchema(BaseModel):
     username: str
     email: str
     hashed_password: str

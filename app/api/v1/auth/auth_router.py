@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.docs.tags import ApiTags
-from app.exceptions import UserAlreadyExistError, UserNotFoundError, WrongPasswordError
+from app.exceptions import UserAlreadyExistsError, UserNotFoundError, WrongPasswordError
 from app.schemas.api.v1.auth_schemas import (
     CredentialsLoginDataSchema,
     RefreshLoginDataSchema,
     RegisterResponseSchema,
+    RegisterUserCredentialsSchema,
     ResetPasswordSchema,
     ResetUsernameSchema,
-    UserCredentialsSchema,
     UserHistoryResponseSchema,
     UserNewSchema,
     UserTokensSchema,
@@ -28,14 +28,14 @@ auth_router = APIRouter(prefix='/auth')
     tags=[ApiTags.V1_AUTH],
 )
 async def register(
-    user_credentials: UserCredentialsSchema,
+    user_credentials: RegisterUserCredentialsSchema,
     service: RegistrationService = Depends(),
 ):
     try:
         if user := await service.create_user(user_credentials):
-            return user
-    except UserAlreadyExistError:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT)
+            return RegisterResponseSchema(**user.model_dump())
+    except UserAlreadyExistsError as err:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=err.message)
 
 
 @auth_router.post(

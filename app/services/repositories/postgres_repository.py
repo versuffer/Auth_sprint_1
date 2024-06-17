@@ -4,11 +4,10 @@ from sqlalchemy import Column, and_, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.db.postgres.base import async_engine
 
-class PostgresService:
-    def __init__(self, session: AsyncSession):
-        self.session = session
 
+class PostgresRepository:
     @staticmethod
     def _build_query(
         model,
@@ -31,25 +30,30 @@ class PostgresService:
         return query
 
     async def get_one_obj(self, model, **kwargs):
-        query = self._build_query(model, **kwargs)
-        result = await self.session.execute(query)
-        return result.scalar_one_or_none()
+        async with AsyncSession(bind=async_engine, expire_on_commit=False) as session:
+            query = self._build_query(model, **kwargs)
+            result = await session.execute(query)
+            return result.scalar_one_or_none()
 
     async def get_all_obj(self, model, **kwargs):
-        query = self._build_query(model, **kwargs)
-        result = await self.session.execute(query)
-        return result.scalars().all()
+        async with AsyncSession(bind=async_engine, expire_on_commit=False) as session:
+            query = self._build_query(model, **kwargs)
+            result = await session.execute(query)
+            return result.scalars().all()
 
     async def create_obj(self, obj) -> None:
-        self.session.add(obj)
-        await self.session.commit()
+        async with AsyncSession(bind=async_engine, expire_on_commit=False) as session:
+            session.add(obj)
+            await session.commit()
 
     async def update_obj(self, model, **kwargs) -> None:
-        query = self._build_query(model, action=update, **kwargs)
-        await self.session.execute(query)
-        await self.session.commit()
+        async with AsyncSession(bind=async_engine, expire_on_commit=False) as session:
+            query = self._build_query(model, action=update, **kwargs)
+            await session.execute(query)
+            await session.commit()
 
     async def delete_obj(self, model, **kwargs) -> None:
-        query = self._build_query(model, action=delete, **kwargs)
-        await self.session.execute(query)
-        await self.session.commit()
+        async with AsyncSession(bind=async_engine, expire_on_commit=False) as session:
+            query = self._build_query(model, action=delete, **kwargs)
+            await session.execute(query)
+            await session.commit()

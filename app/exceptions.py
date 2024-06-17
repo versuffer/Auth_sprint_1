@@ -1,26 +1,32 @@
-class UserAlreadyExistError(Exception):
+class BaseError(Exception):
+    message: str = 'Base Error'
+
+    def __init__(self, *args: object, message: str | None = None) -> None:
+        self.message = message or self.message
+        if args:
+            self.message += f' Details: {self.args}'
+        super().__init__(*args)
+
+
+class UserAlreadyExistsError(BaseError):
     pass
 
 
-class UserNotFoundError(Exception):
+class UserNotFoundError(BaseError):
     pass
 
 
-class RoleNotFoundError(Exception):
+class RoleNotFoundError(BaseError):
     pass
 
 
-class WrongPasswordError(Exception):
+class WrongPasswordError(BaseError):
     pass
 
 
-class RefreshTokenValidationError(Exception):
+class RefreshTokenValidationError(BaseError):
     pass
 
 
-class RoleAlreadyExist(Exception):
-    pass
-
-
-class UserAlreadyExist(Exception):
+class RoleAlreadyExistError(BaseError):
     pass
