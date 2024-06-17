@@ -6,6 +6,10 @@ from app.schemas.api.v1.auth_schemas import (
     HistorySchema,
     RefreshLoginDataSchema,
     UserTokenDataSchema,
+    UserHistoryResponseSchema,
+    UserLoginCredentialsSchema,
+    UserRefreshCredentialsSchema,
+    UserTokensCredentialsSchema,
     UserTokensSchema,
 )
 from app.schemas.services.auth.user_service_schemas import UserDBSchema
@@ -59,3 +63,10 @@ class AuthenticationService:
 
     async def verify_access_token(self, access_token: str) -> bool:
         return self.session_service.verify_access_token(access_token)
+
+    async def get_history(self, access_token: str) -> UserHistoryResponseSchema:
+        login = await self.session_service.get_login_from_access_token(access_token)
+        user = await self.user_service.get_user(login)
+        if not user:
+            raise UserNotFoundError
+        return await self.user_service.get_history(user.id)
