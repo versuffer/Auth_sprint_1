@@ -16,13 +16,13 @@ class UserRepository:
     def __init__(self):
         self.db: PostgresRepository = PostgresRepository()
 
-    async def get_user_by_email(self, email: EmailStr, *, session: AsyncSession | None = None) -> UserDBSchema | None:
+    async def _get_user_by_email(self, email: EmailStr, *, session: AsyncSession | None = None) -> UserDBSchema | None:
         db_user = await self.db.get_one_obj(
             UserModel, where_value=[(UserModel.email, email)], select_in_load=UserModel.roles, session=session
         )
         return UserDBSchema.model_validate(db_user) if db_user else None
 
-    async def get_user_by_username(self, username: str, *, session: AsyncSession | None = None) -> UserDBSchema | None:
+    async def _get_user_by_username(self, username: str, *, session: AsyncSession | None = None) -> UserDBSchema | None:
         db_user = await self.db.get_one_obj(
             UserModel, where_value=[(UserModel.username, username)], select_in_load=UserModel.roles, session=session
         )
@@ -35,10 +35,10 @@ class UserRepository:
         return UserDBSchema.model_validate(db_user) if db_user else None
 
     async def create(self, user_data: UserCreateSchema) -> UserDBSchema:
-        if user := await self.get_user_by_username(username=user_data.username):
+        if user := await self._get_user_by_username(username=user_data.username):
             raise UserAlreadyExistsError(message=f'User with such username already exists: {user.username}')
 
-        if user := await self.get_user_by_email(email=user_data.email):
+        if user := await self._get_user_by_email(email=user_data.email):
             raise UserAlreadyExistsError(message=f'User with such email already exists: {user.email}')
 
         user_model = UserModel(**user_data.model_dump())
