@@ -56,7 +56,8 @@ class ResetPasswordSchema(BaseModel):
 
 class RegisterResponseSchema(BaseModel):
     id: uuid.UUID
-    login: str
+    username: str
+    email: EmailStr
     is_superuser: bool
 
 

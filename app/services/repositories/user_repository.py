@@ -2,6 +2,7 @@ from uuid import UUID
 
 from pydantic import EmailStr
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logs import logger
 from app.db.postgres.models.users import UserModel, UserRoleAssociationModel
@@ -15,21 +16,21 @@ class UserRepository:
     def __init__(self):
         self.db: PostgresRepository = PostgresRepository()
 
-    async def get_user_by_email(self, email: EmailStr) -> UserDBSchema | None:
+    async def get_user_by_email(self, email: EmailStr, *, session: AsyncSession | None = None) -> UserDBSchema | None:
         db_user = await self.db.get_one_obj(
-            UserModel, where_value=[(UserModel.email, email)], select_in_load=UserModel.roles
+            UserModel, where_value=[(UserModel.email, email)], select_in_load=UserModel.roles, session=session
         )
         return UserDBSchema.model_validate(db_user) if db_user else None
 
-    async def get_user_by_username(self, username: str) -> UserDBSchema | None:
+    async def get_user_by_username(self, username: str, *, session: AsyncSession | None = None) -> UserDBSchema | None:
         db_user = await self.db.get_one_obj(
-            UserModel, where_value=[(UserModel.username, username)], select_in_load=UserModel.roles
+            UserModel, where_value=[(UserModel.username, username)], select_in_load=UserModel.roles, session=session
         )
         return UserDBSchema.model_validate(db_user) if db_user else None
 
-    async def get(self, user_id: UUID) -> UserDBSchema | None:
+    async def get(self, user_id: UUID, *, session: AsyncSession | None = None) -> UserDBSchema | None:
         db_user = await self.db.get_one_obj(
-            UserModel, where_value=[(UserModel.id, user_id)], select_in_load=UserModel.roles
+            UserModel, where_value=[(UserModel.id, user_id)], select_in_load=UserModel.roles, session=session
         )
         return UserDBSchema.model_validate(db_user) if db_user else None
 
