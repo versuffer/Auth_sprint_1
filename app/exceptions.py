@@ -14,6 +14,10 @@ class WrongPasswordError(Exception):
     pass
 
 
+class RefreshTokenValidationError(Exception):
+    pass
+
+
 class RoleAlreadyExist(Exception):
     pass
 
