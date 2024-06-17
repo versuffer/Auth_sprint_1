@@ -10,7 +10,9 @@ class UserCredentialsSchema(BaseModel):
 
 
 class UserNewSchema(BaseModel):
-    login: str
+
+    username: str
+    email: str
     hashed_password: str
 
 
