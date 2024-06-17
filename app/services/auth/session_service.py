@@ -1,23 +1,17 @@
 import uuid
 from datetime import datetime
 
+from app.core.config import app_settings
+from app.db.redis.redis_repo import RedisRepository
 from app.exceptions import RefreshTokenValidationError
 from app.schemas.api.v1.auth_schemas import UserTokenDataSchema, UserTokensSchema
 from app.services.utils.jwt_service import jwt_service
 
 
-class RedisRepository:
-    async def save_session(self, login: str, session_id: uuid.UUID) -> None:
-        pass
-
-    async def delete_session(self, session_id: uuid.UUID) -> None:
-        pass
-
-
 class SessionService:
     def __init__(self):
         self.jwt_service = jwt_service
-        self.redis_repo = RedisRepository()
+        self.redis_repo = RedisRepository(app_settings.REDIS_DSN)
 
     async def create_token_pair(self, user_token_data: UserTokenDataSchema) -> UserTokensSchema:
         user_login = user_token_data.login
