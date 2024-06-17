@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logs import logger
+from app.db.postgres.base import manage_async_session
 from app.db.postgres.models.users import UserModel, UserRoleAssociationModel
 from app.exceptions import UserAlreadyExistsError
 from app.schemas.services.auth.user_service_schemas import UserCreateSchema
@@ -34,16 +35,17 @@ class UserRepository:
         )
         return UserDBSchema.model_validate(db_user) if db_user else None
 
-    async def create(self, user_data: UserCreateSchema) -> UserDBSchema:
-        if user := await self._get_user_by_username(username=user_data.username):
+    @manage_async_session
+    async def create(self, user_data: UserCreateSchema, *, session: AsyncSession | None = None) -> UserDBSchema:
+        if user := await self._get_user_by_username(username=user_data.username, session=session):
             raise UserAlreadyExistsError(message=f'User with such username already exists: {user.username}')
 
-        if user := await self._get_user_by_email(email=user_data.email):
+        if user := await self._get_user_by_email(email=user_data.email, session=session):
             raise UserAlreadyExistsError(message=f'User with such email already exists: {user.email}')
 
         user_model = UserModel(**user_data.model_dump())
         await self.db.create_obj(user_model)
-        return await self.get(user_model.id)
+        return await self.get(user_model.id, session=session)
 
     async def update(self, user_id: UUID, data: dict) -> UserDBSchema | None:
         try:
