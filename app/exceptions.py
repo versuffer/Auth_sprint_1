@@ -12,3 +12,7 @@ class RoleNotFoundError(Exception):
 
 class WrongPasswordError(Exception):
     pass
+
+
+class RefreshTokenValidationError(Exception):
+    pass

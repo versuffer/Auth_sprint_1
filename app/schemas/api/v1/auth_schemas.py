@@ -14,23 +14,26 @@ class UserNewSchema(BaseModel):
     hashed_password: str
 
 
-class UserLoginCredentialsSchema(UserCredentialsSchema):
+class BaseLoginDataSchema(BaseModel):
     user_agent: str  # TODO правильно доставать юзер агент
 
 
-class UserRefreshCredentialsSchema(BaseModel):
+class CredentialsLoginDataSchema(BaseLoginDataSchema, UserCredentialsSchema):
+    pass
+
+
+class RefreshLoginDataSchema(BaseLoginDataSchema):
     refresh_token: str
-    user_agent: str
 
 
-class UserTokensCredentialsSchema(BaseModel):
+class UserTokenDataSchema(BaseModel):
     login: str
     roles: list[str]
 
 
 class UserTokensSchema(BaseModel):
-    refresh_token: str
     access_token: str
+    refresh_token: str
 
 
 class ResetUsernameSchema(BaseModel):
