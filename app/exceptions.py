@@ -16,3 +16,11 @@ class WrongPasswordError(Exception):
 
 class RefreshTokenValidationError(Exception):
     pass
+
+
+class RoleAlreadyExist(Exception):
+    pass
+
+
+class UserAlreadyExist(Exception):
+    pass
