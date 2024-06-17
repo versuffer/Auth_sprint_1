@@ -3,7 +3,6 @@ from datetime import datetime
 
 from app.core.config import app_settings
 from app.db.redis.redis_repo import RedisRepository
-
 from app.exceptions import RefreshTokenValidationError
 from app.schemas.api.v1.auth_schemas import UserTokenDataSchema, UserTokensSchema
 from app.services.utils.jwt_service import jwt_service

@@ -10,9 +10,9 @@ class RedisRepository:
         self.expire_time: int = 60
 
     async def save_session(self, login: str, session_id: uuid.UUID) -> None:
-        session_key = f"session:{session_id}"
+        session_key = f'session:{session_id}'
         await self.redis.set(session_key, login, ex=self.expire_time)
 
     async def delete_session(self, session_id: uuid.UUID) -> None:
-        session_key = f"session:{session_id}"
+        session_key = f'session:{session_id}'
         await self.redis.delete(session_key)
