@@ -5,11 +5,8 @@ from app.schemas.api.v1.auth_schemas import (
     CredentialsLoginDataSchema,
     HistorySchema,
     RefreshLoginDataSchema,
-    UserTokenDataSchema,
     UserHistoryResponseSchema,
-    UserLoginCredentialsSchema,
-    UserRefreshCredentialsSchema,
-    UserTokensCredentialsSchema,
+    UserTokenDataSchema,
     UserTokensSchema,
 )
 from app.schemas.services.auth.user_service_schemas import UserDBSchema

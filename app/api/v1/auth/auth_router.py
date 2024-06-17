@@ -10,9 +10,7 @@ from app.schemas.api.v1.auth_schemas import (
     ResetUsernameSchema,
     UserCredentialsSchema,
     UserHistoryResponseSchema,
-    UserLoginCredentialsSchema,
     UserNewSchema,
-    UserRefreshCredentialsSchema,
     UserTokensSchema,
 )
 from app.services.auth.auth_service import AuthenticationService
