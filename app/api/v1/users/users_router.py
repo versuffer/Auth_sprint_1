@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.docs.tags import ApiTags
-from app.exceptions import RoleNotFoundError, UserNotFoundError, RoleAlreadyExistError
+from app.exceptions import RoleAlreadyExistError, RoleNotFoundError, UserNotFoundError
 from app.schemas.api.v1.roles_schemas import (
     AssignUserRoleResponseSchema,
     GetUserRolesResponseSchema,
