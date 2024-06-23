@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logs import logger
 from app.db.postgres.base import manage_async_session
 from app.db.postgres.models.users import UserModel, UserRoleAssociationModel
-from app.exceptions import UserAlreadyExistsError, RoleAlreadyExistError
+from app.exceptions import RoleAlreadyExistError, UserAlreadyExistsError
 from app.schemas.services.auth.user_service_schemas import UserCreateSchema
 from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
 from app.services.repositories.postgres_repository import PostgresRepository
