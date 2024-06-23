@@ -41,7 +41,7 @@ line-length = 120
 skip-string-normalization = true
 
 [tool.flake8]
-exclude = [".git", "__pycache__"]
+exclude = [".git", "__pycache__", ".venv"]
 max-line-length = 120
 
 [tool.mypy]

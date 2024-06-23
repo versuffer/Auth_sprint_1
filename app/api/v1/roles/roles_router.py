@@ -1,14 +1,16 @@
+from http import HTTPStatus
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.docs.tags import ApiTags
+from app.exceptions import RoleAlreadyExistError
 from app.schemas.api.v1.roles_schemas import (
     CreateRoleResponseSchema,
     GetRoleResponseSchema,
     GetRolesResponseSchema,
 )
-from app.schemas.services.auth.role_service_schemas import RoleSchema
+from app.schemas.services.auth.role_service_schemas import RoleSchemaCreate
 from app.services.auth.role_services import RolesService
 
 roles_router = APIRouter(prefix='/roles')
@@ -18,7 +20,7 @@ roles_router = APIRouter(prefix='/roles')
     '',
     status_code=status.HTTP_200_OK,
     summary='Получить все существующие роли',
-    response_model=GetRolesResponseSchema,
+    response_model=list[GetRolesResponseSchema],
     tags=[ApiTags.V1_ROLES],
 )
 async def get_roles(
@@ -52,10 +54,13 @@ async def get_role(
 )
 async def create_role(
     # access_token: AuthorizationHeader (только для суперпользователей)
-    role_data: RoleSchema,
+    role_data: RoleSchemaCreate,
     service: RolesService = Depends(),
 ):
-    return await service.create_role(role_data)
+    try:
+        return await service.create_role(role_data)
+    except RoleAlreadyExistError as err:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=err.message)
 
 
 @roles_router.delete(
