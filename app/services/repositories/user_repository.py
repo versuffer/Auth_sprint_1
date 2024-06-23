@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logs import logger
 from app.db.postgres.base import manage_async_session
 from app.db.postgres.models.users import UserModel, UserRoleAssociationModel
-from app.exceptions import UserAlreadyExistsError
+from app.exceptions import UserAlreadyExistsError, RoleAlreadyExistError
 from app.schemas.services.auth.user_service_schemas import UserCreateSchema
 from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
 from app.services.repositories.postgres_repository import PostgresRepository
@@ -62,7 +62,7 @@ class UserRepository:
             return await self.get(user_id)
         except IntegrityError as err:
             logger.error('user_id=%s already exist role_id=%s. Error=%s', user_id, role_id, err)
-            return None
+            raise RoleAlreadyExistError
 
     async def delete_user_role(self, user_id: UUID, role_id: UUID) -> UserDBSchema | None:
         try:
@@ -70,7 +70,7 @@ class UserRepository:
                 UserRoleAssociationModel,
                 where_value=[(UserRoleAssociationModel.user_id, user_id), (UserRoleAssociationModel.role_id, role_id)],
             )
-            await self.get(user_id)
+            return await self.get(user_id)
         except Exception as err:
             logger.error('Can not delete role_id=%s error=%s', role_id, err)
             return None
