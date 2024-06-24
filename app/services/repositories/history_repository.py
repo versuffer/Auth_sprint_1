@@ -21,7 +21,7 @@ class HistoryRepository:
                 auth_at=history_data.auth_date,
                 user_agent=history_data.user_agent,
                 login_type=history_data.login_type,
-                session_id='53c56b98-1d6f-44fb-b7c5-082f99cb46fd',
+                session_id=history_data.session_id,
             )
             await self.db.create_obj(add_history)
         except Exception as err:
