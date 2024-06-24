@@ -6,8 +6,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class HistoryDBSchema(BaseModel):
     id: uuid.UUID
-    auth_date: datetime.datetime
+    auth_at: datetime.datetime
     user_agent: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserHistoryDBSchema(BaseModel):

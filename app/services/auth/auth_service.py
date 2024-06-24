@@ -1,4 +1,5 @@
 import datetime
+import uuid
 
 from app.exceptions import UserNotFoundError, WrongPasswordError
 from app.schemas.api.v1.auth_schemas import (
@@ -8,7 +9,6 @@ from app.schemas.api.v1.auth_schemas import (
     RefreshLoginDataSchema,
     SessionDataSchema,
     TokenPairSchema,
-    UserHistoryResponseSchema,
     UserTokenDataSchema,
 )
 from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
@@ -34,10 +34,10 @@ class AuthenticationService:
             raise WrongPasswordError
 
     async def _create_session(self, user: UserDBSchema) -> SessionDataSchema:
-        return await self.session_service.create_session(UserTokenDataSchema(login=user.login, roles=user.roles))
+        return await self.session_service.create_session(UserTokenDataSchema(login=user.email, roles=user.roles))
 
     async def _save_user_login_history(
-        self, user: UserDBSchema, login_data: CredentialsLoginDataSchema | RefreshLoginDataSchema, session_id: str
+        self, user: UserDBSchema, login_data: CredentialsLoginDataSchema | RefreshLoginDataSchema, session_id: uuid.UUID
     ):
         await self.user_service.save_login_history(
             HistorySchemaCreate(
@@ -69,10 +69,11 @@ class AuthenticationService:
     async def verify_access_token(self, access_token: str) -> bool:
         return self.session_service.verify_access_token(access_token)
 
-    async def get_history(self, access_token: str) -> UserHistoryResponseSchema:
+    async def get_history(self, access_token: str) -> list[HistorySchema]:
         login = await self.session_service.get_login_from_access_token(access_token)
 
         if user := await self.user_service.get_user(login):
-            await self.user_service.get_history(user)
+            history = await self.user_service.get_history(user)
+            return [HistorySchema(**entry.model_dump()) for entry in history]
 
         raise UserNotFoundError

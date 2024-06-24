@@ -2,7 +2,7 @@ import datetime
 import uuid
 from enum import StrEnum
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class LoginType(StrEnum):
@@ -51,7 +51,7 @@ class TokenPairSchema(BaseModel):
 
 
 class SessionDataSchema(TokenPairSchema):
-    session_id: str
+    session_id: uuid.UUID
 
 
 class ResetUsernameSchema(BaseModel):
@@ -77,15 +77,16 @@ class HistorySchemaCreate(BaseModel):
     auth_date: datetime.datetime
     user_agent: str
     login_type: LoginType
-    session_id: str
+    session_id: uuid.UUID
 
 
 class HistorySchema(BaseModel):
     id: uuid.UUID
-    auth_date: datetime.datetime
+    auth_at: datetime.datetime = Field(serialization_alias='auth_date')  # TODO поменять в миграции на auth_date
     user_agent: str
 
+    model_config = ConfigDict(from_attributes=True)
 
-class UserHistoryResponseSchema(BaseModel):
-    user_id: uuid.UUID
-    user_history: list[HistorySchema]
+
+class HistoryResponseSchema(HistorySchema):
+    pass

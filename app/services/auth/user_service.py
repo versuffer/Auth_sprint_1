@@ -1,23 +1,12 @@
 import uuid
 
 from app.exceptions import UserAlreadyExistsError
-from app.schemas.api.v1.auth_schemas import (
-    HistorySchema,
-    HistorySchemaCreate,
-    UserHistoryResponseSchema,
-    UserNewSchema,
-)
+from app.schemas.api.v1.auth_schemas import HistorySchemaCreate, UserNewSchema
 from app.schemas.services.auth.user_service_schemas import UserCreateSchema, UserSchema
+from app.schemas.services.repositories.history_repository_schemas import HistoryDBSchema
 from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
 from app.services.repositories.history_repository import HistoryRepository
 from app.services.repositories.user_repository import UserRepository
-
-# class HistoryRepository:
-#     async def create(self, history_data: HistorySchema) -> None:
-#         pass
-#
-#     async def get(self, user_id: uuid.UUID) -> UserHistoryResponseSchema:
-#         pass
 
 
 class UserService:
@@ -38,7 +27,7 @@ class UserService:
     async def save_login_history(self, history_data: HistorySchemaCreate) -> None:
         await self.history_repository.create(history_data)
 
-    async def get_history(self, user: UserDBSchema) -> UserHistoryResponseSchema:
+    async def get_history(self, user: UserDBSchema) -> list[HistoryDBSchema]:
         return await self.history_repository.get(user)
 
     async def check_is_superuser(self, login: str) -> bool:
