@@ -4,19 +4,20 @@ from app.exceptions import UserAlreadyExistsError
 from app.schemas.api.v1.auth_schemas import (
     HistorySchema,
     UserHistoryResponseSchema,
-    UserNewSchema,
+    UserNewSchema, HistorySchemaCreate,
 )
 from app.schemas.services.auth.user_service_schemas import UserCreateSchema, UserSchema
 from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
+from app.services.repositories.history_repository import HistoryRepository
 from app.services.repositories.user_repository import UserRepository
 
 
-class HistoryRepository:
-    async def create(self, history_data: HistorySchema) -> None:
-        pass
-
-    async def get(self, user_id: uuid.UUID) -> UserHistoryResponseSchema:
-        pass
+# class HistoryRepository:
+#     async def create(self, history_data: HistorySchema) -> None:
+#         pass
+#
+#     async def get(self, user_id: uuid.UUID) -> UserHistoryResponseSchema:
+#         pass
 
 
 class UserService:
@@ -31,14 +32,14 @@ class UserService:
         except UserAlreadyExistsError as err:
             raise err
 
-    async def get_user(self, login: str) -> UserDBSchema:
+    async def get_user(self, login: str) -> UserDBSchema | None:
         return await self.user_repository.get_user_by_login(login)
 
-    async def save_login_history(self, history_data: HistorySchema) -> None:
+    async def save_login_history(self, history_data: HistorySchemaCreate) -> None:
         await self.history_repository.create(history_data)
 
-    async def get_history(self, user_id: uuid.UUID) -> UserHistoryResponseSchema:
-        return await self.history_repository.get(user_id)
+    async def get_history(self, user: UserDBSchema) -> UserHistoryResponseSchema:
+        return await self.history_repository.get(user)
 
     async def check_is_superuser(self, login: str) -> bool:
         user = await self.user_repository.get_user_by_login(login)

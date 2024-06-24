@@ -1,8 +1,10 @@
+import re
 from uuid import UUID
 
 from pydantic import EmailStr
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.logs import logger
 from app.db.postgres.base import manage_async_session
@@ -17,15 +19,22 @@ class UserRepository:
     def __init__(self):
         self.db: PostgresRepository = PostgresRepository()
 
+    async def get_user_by_login(self, login: str, *, session: AsyncSession | None = None) -> UserDBSchema | None:
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+
+        if re.match(email_pattern, login) is not None:
+            return await self._get_user_by_email(login)
+        return await self._get_user_by_username(login)
+
     async def _get_user_by_email(self, email: EmailStr, *, session: AsyncSession | None = None) -> UserDBSchema | None:
         db_user = await self.db.get_one_obj(
-            UserModel, where_value=[(UserModel.email, email)], select_in_load=UserModel.roles, session=session
+            UserModel, where_value=[(UserModel.email, email)], select_in_load=[UserModel.roles, UserModel.history], session=session
         )
         return UserDBSchema.model_validate(db_user) if db_user else None
 
     async def _get_user_by_username(self, username: str, *, session: AsyncSession | None = None) -> UserDBSchema | None:
         db_user = await self.db.get_one_obj(
-            UserModel, where_value=[(UserModel.username, username)], select_in_load=UserModel.roles, session=session
+            UserModel, where_value=[(UserModel.username, username)], select_in_load=[UserModel.roles, UserModel.history], session=session
         )
         return UserDBSchema.model_validate(db_user) if db_user else None
 

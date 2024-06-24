@@ -7,7 +7,7 @@ from app.schemas.api.v1.auth_schemas import (
     RefreshLoginDataSchema,
     UserHistoryResponseSchema,
     UserTokenDataSchema,
-    UserTokensSchema,
+    UserTokensSchema, HistorySchemaCreate,
 )
 from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
 from app.services.auth.session_service import SessionService
@@ -38,12 +38,12 @@ class AuthenticationService:
         self, user: UserDBSchema, login_data: CredentialsLoginDataSchema | RefreshLoginDataSchema
     ):
         await self.user_service.save_login_history(
-            HistorySchema(id=user.id, auth_date=datetime.datetime.utcnow(), user_agent=login_data.user_agent)
+            HistorySchemaCreate(user_id=user.id, auth_date=datetime.datetime.utcnow(), user_agent=login_data.user_agent)
         )  # TODO сделать фоновой таской
 
     async def authenticate_by_credentials(self, login_data: CredentialsLoginDataSchema) -> UserTokensSchema:
         user = await self._get_user(login=login_data.login)
-        self._verify_user_password(user=user, password=password_service)
+        self._verify_user_password(user=user, password=login_data.password)
         tokens = await self._get_auth_token_pair(user=user)
         await self._save_user_login_history(user=user, login_data=login_data)
         return tokens
@@ -63,7 +63,8 @@ class AuthenticationService:
 
     async def get_history(self, access_token: str) -> UserHistoryResponseSchema:
         login = await self.session_service.get_login_from_access_token(access_token)
-        user = await self.user_service.get_user(login)
-        if not user:
-            raise UserNotFoundError
-        return await self.user_service.get_history(user.id)
+
+        if user := await self.user_service.get_user(login):
+            await self.user_service.get_history(user)
+
+        raise UserNotFoundError

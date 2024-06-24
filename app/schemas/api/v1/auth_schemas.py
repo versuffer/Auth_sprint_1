@@ -61,6 +61,12 @@ class RegisterResponseSchema(BaseModel):
     is_superuser: bool
 
 
+class HistorySchemaCreate(BaseModel):
+    user_id: uuid.UUID
+    auth_date: datetime.datetime
+    user_agent: str
+
+
 class HistorySchema(BaseModel):
     id: uuid.UUID
     auth_date: datetime.datetime
