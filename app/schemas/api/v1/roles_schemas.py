@@ -5,11 +5,7 @@ from pydantic import BaseModel
 from app.schemas.services.auth.role_service_schemas import RoleSchema
 
 
-class RolesSchema(BaseModel):
-    roles: list[RoleSchema]
-
-
-class GetRolesResponseSchema(RolesSchema):
+class GetRolesResponseSchema(RoleSchema):
     pass
 
 
@@ -23,7 +19,7 @@ class CreateRoleResponseSchema(RoleSchema):
 
 class GetUserRolesResponseSchema(BaseModel):
     user_id: uuid.UUID
-    roles: RolesSchema
+    roles: list[RoleSchema]
 
 
 class AssignUserRoleResponseSchema(GetUserRolesResponseSchema):
