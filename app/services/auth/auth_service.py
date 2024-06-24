@@ -72,7 +72,10 @@ class AuthenticationService:
     async def get_history(self, access_token: str) -> list[HistorySchema]:
         login = await self.session_service.get_login_from_access_token(access_token)
 
-        if user := await self.user_service.get_user(login):
+        if not login:
+            raise
+
+        if login and (user := await self.user_service.get_user(login)):
             history = await self.user_service.get_history(user)
             return [HistorySchema(**entry.model_dump()) for entry in history]
 

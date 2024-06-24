@@ -32,7 +32,7 @@ class UserRepository:
             select_in_load=[UserModel.roles, UserModel.history],
             session=session,
         )
-        return UserDBSchema.from_orm(db_user) if db_user else None
+        return UserDBSchema.model_validate(db_user) if db_user else None
 
     async def _get_user_by_username(self, username: str, *, session: AsyncSession | None = None) -> UserDBSchema | None:
         db_user = await self.db.get_one_obj(
@@ -45,7 +45,10 @@ class UserRepository:
 
     async def get(self, user_id: UUID, *, session: AsyncSession | None = None) -> UserDBSchema | None:
         db_user = await self.db.get_one_obj(
-            UserModel, where_value=[(UserModel.id, user_id)], select_in_load=UserModel.roles, session=session
+            UserModel,
+            where_value=[(UserModel.id, user_id)],
+            select_in_load=[UserModel.roles, UserModel.history],
+            session=session,
         )
         return UserDBSchema.model_validate(db_user) if db_user else None
 

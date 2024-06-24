@@ -6,7 +6,7 @@ from app.api.docs.tags import ApiTags
 from app.exceptions import RoleAlreadyExistError, RoleNotFoundError, UserNotFoundError
 from app.schemas.api.v1.roles_schemas import (
     AssignUserRoleResponseSchema,
-    GetUserRolesResponseSchema,
+    GetRoleResponseSchema,
     RevokeUserRoleResponseSchema,
 )
 from app.services.auth.role_services import UserRoleService
@@ -18,7 +18,7 @@ users_router = APIRouter(prefix='/users')
     '/{user_id}/roles',
     status_code=status.HTTP_200_OK,
     summary='Получить все роли пользователя',
-    response_model=GetUserRolesResponseSchema,
+    response_model=list[GetRoleResponseSchema],
     tags=[ApiTags.V1_USERS],
 )
 async def get_user_roles(
