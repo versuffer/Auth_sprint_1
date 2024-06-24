@@ -3,14 +3,14 @@ import uuid
 from app.exceptions import UserAlreadyExistsError
 from app.schemas.api.v1.auth_schemas import (
     HistorySchema,
+    HistorySchemaCreate,
     UserHistoryResponseSchema,
-    UserNewSchema, HistorySchemaCreate,
+    UserNewSchema,
 )
 from app.schemas.services.auth.user_service_schemas import UserCreateSchema, UserSchema
 from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
 from app.services.repositories.history_repository import HistoryRepository
 from app.services.repositories.user_repository import UserRepository
-
 
 # class HistoryRepository:
 #     async def create(self, history_data: HistorySchema) -> None:

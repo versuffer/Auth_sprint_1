@@ -1,7 +1,7 @@
 import datetime
 import uuid
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class HistoryDBSchema(BaseModel):

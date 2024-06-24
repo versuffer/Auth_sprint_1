@@ -1,7 +1,13 @@
 import datetime
 import uuid
+from enum import StrEnum
 
 from pydantic import BaseModel, EmailStr
+
+
+class LoginType(StrEnum):
+    CREDENTIALS = 'credentials'
+    REFRESH = 'refresh'
 
 
 class UserCredentialsSchema(BaseModel):
@@ -23,6 +29,7 @@ class UserNewSchema(BaseModel):
 
 class BaseLoginDataSchema(BaseModel):
     user_agent: str  # TODO правильно доставать юзер агент
+    login_type: LoginType
 
 
 class CredentialsLoginDataSchema(BaseLoginDataSchema, UserCredentialsSchema):
@@ -38,9 +45,13 @@ class UserTokenDataSchema(BaseModel):
     roles: list[str]
 
 
-class UserTokensSchema(BaseModel):
+class TokenPairSchema(BaseModel):
     access_token: str
     refresh_token: str
+
+
+class SessionDataSchema(TokenPairSchema):
+    session_id: str
 
 
 class ResetUsernameSchema(BaseModel):
@@ -65,6 +76,8 @@ class HistorySchemaCreate(BaseModel):
     user_id: uuid.UUID
     auth_date: datetime.datetime
     user_agent: str
+    login_type: LoginType
+    session_id: str
 
 
 class HistorySchema(BaseModel):

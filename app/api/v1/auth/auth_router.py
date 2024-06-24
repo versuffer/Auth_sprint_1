@@ -9,9 +9,9 @@ from app.schemas.api.v1.auth_schemas import (
     RegisterUserCredentialsSchema,
     ResetPasswordSchema,
     ResetUsernameSchema,
+    TokenPairSchema,
     UserHistoryResponseSchema,
     UserNewSchema,
-    UserTokensSchema,
 )
 from app.services.auth.auth_service import AuthenticationService
 from app.services.auth.registration_service import RegistrationService
@@ -42,7 +42,7 @@ async def register(
     '/login',
     status_code=status.HTTP_200_OK,
     summary='Аутентифицировать пользователя по логину и паролю',
-    response_model=UserTokensSchema,
+    response_model=TokenPairSchema,
     tags=[ApiTags.V1_AUTH],
 )
 async def login(
@@ -63,7 +63,7 @@ async def login(
     '/refresh',
     status_code=status.HTTP_200_OK,
     summary='Аутентифицировать пользователя по refresh-токену',
-    response_model=UserTokensSchema,
+    response_model=TokenPairSchema,
     tags=[ApiTags.V1_AUTH],
 )
 async def refresh(
