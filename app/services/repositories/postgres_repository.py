@@ -23,7 +23,7 @@ class PostgresRepository:
         if where_value and len(where_value) > 1:
             query = query.where(and_(_column == _value for _column, _value in where_value))
         if select_in_load:
-            query = query.options(selectinload(select_in_load))
+            query = query.options(*[selectinload(column) for column in select_in_load])
         if action == update:
             query = query.values(**update_values)
 

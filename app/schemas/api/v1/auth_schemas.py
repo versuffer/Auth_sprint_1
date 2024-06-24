@@ -1,7 +1,13 @@
 import datetime
 import uuid
+from enum import StrEnum
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+
+class LoginType(StrEnum):
+    CREDENTIALS = 'credentials'
+    REFRESH = 'refresh'
 
 
 class UserCredentialsSchema(BaseModel):
@@ -23,6 +29,7 @@ class UserNewSchema(BaseModel):
 
 class BaseLoginDataSchema(BaseModel):
     user_agent: str  # TODO правильно доставать юзер агент
+    login_type: LoginType
 
 
 class CredentialsLoginDataSchema(BaseLoginDataSchema, UserCredentialsSchema):
@@ -38,9 +45,13 @@ class UserTokenDataSchema(BaseModel):
     roles: list[str]
 
 
-class UserTokensSchema(BaseModel):
+class TokenPairSchema(BaseModel):
     access_token: str
     refresh_token: str
+
+
+class SessionDataSchema(TokenPairSchema):
+    session_id: uuid.UUID
 
 
 class ResetUsernameSchema(BaseModel):
@@ -61,12 +72,21 @@ class RegisterResponseSchema(BaseModel):
     is_superuser: bool
 
 
-class HistorySchema(BaseModel):
-    id: uuid.UUID
+class HistorySchemaCreate(BaseModel):
+    user_id: uuid.UUID
     auth_date: datetime.datetime
     user_agent: str
+    login_type: LoginType
+    session_id: uuid.UUID
 
 
-class UserHistoryResponseSchema(BaseModel):
-    user_id: uuid.UUID
-    user_history: list[HistorySchema]
+class HistorySchema(BaseModel):
+    id: uuid.UUID
+    auth_at: datetime.datetime = Field(serialization_alias='auth_date')  # TODO поменять в миграции на auth_date
+    user_agent: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class HistoryResponseSchema(HistorySchema):
+    pass

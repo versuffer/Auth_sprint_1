@@ -3,10 +3,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.docs.tags import ApiTags
-from app.exceptions import RoleNotFoundError, UserNotFoundError
+from app.exceptions import RoleAlreadyExistError, RoleNotFoundError, UserNotFoundError
 from app.schemas.api.v1.roles_schemas import (
     AssignUserRoleResponseSchema,
-    GetUserRolesResponseSchema,
+    GetRoleResponseSchema,
     RevokeUserRoleResponseSchema,
 )
 from app.services.auth.role_services import UserRoleService
@@ -18,7 +18,7 @@ users_router = APIRouter(prefix='/users')
     '/{user_id}/roles',
     status_code=status.HTTP_200_OK,
     summary='Получить все роли пользователя',
-    response_model=GetUserRolesResponseSchema,
+    response_model=list[GetRoleResponseSchema],
     tags=[ApiTags.V1_USERS],
 )
 async def get_user_roles(
@@ -47,6 +47,8 @@ async def assign_user_role(
 ):
     try:
         return await service.assign_user_role(user_id, role_id)
+    except RoleAlreadyExistError:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Пользователи уже имеет эту роль')
     except UserNotFoundError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователя с таким id не существует.')
     except RoleNotFoundError:

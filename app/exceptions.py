@@ -28,5 +28,9 @@ class RefreshTokenValidationError(BaseError):
     pass
 
 
+class AccessTokenValidationError(BaseError):
+    pass
+
+
 class RoleAlreadyExistError(BaseError):
     pass

@@ -4,14 +4,14 @@ from app.api.docs.tags import ApiTags
 from app.exceptions import UserAlreadyExistsError, UserNotFoundError, WrongPasswordError
 from app.schemas.api.v1.auth_schemas import (
     CredentialsLoginDataSchema,
+    HistoryResponseSchema,
     RefreshLoginDataSchema,
     RegisterResponseSchema,
     RegisterUserCredentialsSchema,
     ResetPasswordSchema,
     ResetUsernameSchema,
-    UserHistoryResponseSchema,
+    TokenPairSchema,
     UserNewSchema,
-    UserTokensSchema,
 )
 from app.services.auth.auth_service import AuthenticationService
 from app.services.auth.registration_service import RegistrationService
@@ -42,7 +42,7 @@ async def register(
     '/login',
     status_code=status.HTTP_200_OK,
     summary='Аутентифицировать пользователя по логину и паролю',
-    response_model=UserTokensSchema,
+    response_model=TokenPairSchema,
     tags=[ApiTags.V1_AUTH],
 )
 async def login(
@@ -63,7 +63,7 @@ async def login(
     '/refresh',
     status_code=status.HTTP_200_OK,
     summary='Аутентифицировать пользователя по refresh-токену',
-    response_model=UserTokensSchema,
+    response_model=TokenPairSchema,
     tags=[ApiTags.V1_AUTH],
 )
 async def refresh(
@@ -101,8 +101,10 @@ async def verify_access_token(
     access_token: str,  # TODO
     service: AuthenticationService = Depends(),
 ):
-    if not service.verify_access_token(access_token):
+    if not await service.verify_access_token(access_token):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+
+    return {'is_verified': True}
 
 
 @auth_router.post(
@@ -149,7 +151,7 @@ async def reset_password(
     '/history',
     status_code=status.HTTP_200_OK,
     summary='Получить историю входов пользователя',
-    response_model=UserHistoryResponseSchema,
+    response_model=list[HistoryResponseSchema],
     tags=[ApiTags.V1_AUTH],
 )
 async def get_history(access_token: str, service: AuthenticationService = Depends()):

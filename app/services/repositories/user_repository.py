@@ -1,3 +1,4 @@
+import re
 from uuid import UUID
 
 from pydantic import EmailStr
@@ -7,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logs import logger
 from app.db.postgres.base import manage_async_session
 from app.db.postgres.models.users import UserModel, UserRoleAssociationModel
-from app.exceptions import UserAlreadyExistsError
+from app.exceptions import RoleAlreadyExistError, UserAlreadyExistsError
 from app.schemas.services.auth.user_service_schemas import UserCreateSchema
 from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
 from app.services.repositories.postgres_repository import PostgresRepository
@@ -17,21 +18,37 @@ class UserRepository:
     def __init__(self):
         self.db: PostgresRepository = PostgresRepository()
 
+    async def get_user_by_login(self, login: str, *, session: AsyncSession | None = None) -> UserDBSchema | None:
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+
+        if re.match(email_pattern, login) is not None:
+            return await self._get_user_by_email(login)
+        return await self._get_user_by_username(login)
+
     async def _get_user_by_email(self, email: EmailStr, *, session: AsyncSession | None = None) -> UserDBSchema | None:
         db_user = await self.db.get_one_obj(
-            UserModel, where_value=[(UserModel.email, email)], select_in_load=UserModel.roles, session=session
+            UserModel,
+            where_value=[(UserModel.email, email)],
+            select_in_load=[UserModel.roles, UserModel.history],
+            session=session,
         )
         return UserDBSchema.model_validate(db_user) if db_user else None
 
     async def _get_user_by_username(self, username: str, *, session: AsyncSession | None = None) -> UserDBSchema | None:
         db_user = await self.db.get_one_obj(
-            UserModel, where_value=[(UserModel.username, username)], select_in_load=UserModel.roles, session=session
+            UserModel,
+            where_value=[(UserModel.username, username)],
+            select_in_load=[UserModel.roles, UserModel.history],
+            session=session,
         )
         return UserDBSchema.model_validate(db_user) if db_user else None
 
     async def get(self, user_id: UUID, *, session: AsyncSession | None = None) -> UserDBSchema | None:
         db_user = await self.db.get_one_obj(
-            UserModel, where_value=[(UserModel.id, user_id)], select_in_load=UserModel.roles, session=session
+            UserModel,
+            where_value=[(UserModel.id, user_id)],
+            select_in_load=[UserModel.roles, UserModel.history],
+            session=session,
         )
         return UserDBSchema.model_validate(db_user) if db_user else None
 
@@ -62,7 +79,7 @@ class UserRepository:
             return await self.get(user_id)
         except IntegrityError as err:
             logger.error('user_id=%s already exist role_id=%s. Error=%s', user_id, role_id, err)
-            return None
+            raise RoleAlreadyExistError
 
     async def delete_user_role(self, user_id: UUID, role_id: UUID) -> UserDBSchema | None:
         try:
@@ -70,7 +87,7 @@ class UserRepository:
                 UserRoleAssociationModel,
                 where_value=[(UserRoleAssociationModel.user_id, user_id), (UserRoleAssociationModel.role_id, role_id)],
             )
-            await self.get(user_id)
+            return await self.get(user_id)
         except Exception as err:
             logger.error('Can not delete role_id=%s error=%s', role_id, err)
             return None
