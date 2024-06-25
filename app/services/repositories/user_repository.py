@@ -1,6 +1,6 @@
-import re
 from uuid import UUID
 
+from email_validator import EmailNotValidError, validate_email
 from pydantic import EmailStr
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,11 +22,14 @@ class UserRepository:
         self.db: PostgresRepository = postgres_repository
 
     async def get_user_by_login(self, login: str) -> UserDBSchema | None:
-        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        user = None
+        try:
+            validate_email(login)
+            user = await self._get_user_by_email(login)
+        except EmailNotValidError:
+            pass
 
-        if re.match(email_pattern, login) is not None:
-            return await self._get_user_by_email(login)
-        return await self._get_user_by_username(login)
+        return user or await self._get_user_by_username(login)
 
     async def get_user_by_credentials(self, email: EmailStr, username: str) -> UserDBSchema | None:
         if user := await self._get_user_by_email(email=email):

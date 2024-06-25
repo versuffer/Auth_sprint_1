@@ -39,10 +39,6 @@ class UserService:
     async def get_history(self, user: UserDBSchema) -> list[HistoryDBSchema]:
         return await self.history_repository.get(user)
 
-    async def check_is_superuser(self, login: str) -> bool:
-        user = await self.user_repository.get_user_by_login(login)
-        return user.is_superuser
-
     async def set_username(self, user_id: uuid.UUID, new_username: str) -> UserNewSchema:
         user = await self.user_repository.update(user_id, {'login': new_username})
         return UserNewSchema(login=user.login, hashed_password=user.hashed_password)
