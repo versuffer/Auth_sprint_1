@@ -3,7 +3,7 @@ from datetime import datetime
 
 from jwt import InvalidTokenError
 
-from app.db.redis.redis_repo import RedisRepository
+from app.db.redis.redis_repo import redis_repo
 from app.exceptions import (
     AccessTokenValidationError,
     ExpiredSessionError,
@@ -17,7 +17,7 @@ from app.services.utils.jwt_service import jwt_service
 class SessionService:
     def __init__(self):
         self.jwt_service = jwt_service
-        self.redis_repo = RedisRepository()
+        self.redis_repo = redis_repo
 
     async def create_session(self, user_token_data: UserTokenDataSchema) -> SessionDataSchema:
         user_login = user_token_data.login

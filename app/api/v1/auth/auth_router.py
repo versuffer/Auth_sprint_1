@@ -42,8 +42,7 @@ async def register(
     service: RegistrationService = Depends(),
 ):
     try:
-        if user := await service.create_user(user_credentials):
-            return RegisterResponseSchema(**user.model_dump())
+        return await service.create_user(user_credentials)
     except UserAlreadyExistsError as err:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=err.message)
 

@@ -27,3 +27,6 @@ class RedisRepository:
     async def delete_session(self, session_id: uuid.UUID) -> None:
         session_key = self._build_session_key(session_id)
         await self.redis.delete(session_key)
+
+
+redis_repo = RedisRepository()
