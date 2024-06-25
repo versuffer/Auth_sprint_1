@@ -77,7 +77,10 @@ class AuthenticationService:
             raise err
 
     async def verify_access_token(self, access_token: str) -> bool:
-        return self.session_service.verify_access_token(access_token)
+        try:
+            return self.session_service.verify_access_token(access_token)
+        except TokenError as err:
+            raise err
 
     async def get_history(self, access_token: str) -> list[HistorySchema]:
         login = await self.session_service.get_login_from_access_token(access_token)

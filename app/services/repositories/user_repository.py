@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logs import logger
 from app.db.postgres.base import manage_async_session
 from app.db.postgres.models.users import UserModel, UserRoleAssociationModel
-from app.exceptions import RoleAlreadyExistError, UserAlreadyExistsError
+from app.exceptions import RoleAlreadyExistError
 from app.schemas.services.auth.user_service_schemas import UserCreateSchema
 from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
 from app.services.repositories.postgres_repository import (
@@ -27,6 +27,14 @@ class UserRepository:
         if re.match(email_pattern, login) is not None:
             return await self._get_user_by_email(login)
         return await self._get_user_by_username(login)
+
+    async def get_user_by_credentials(self, email: EmailStr, username: str) -> UserDBSchema | None:
+        if user := await self._get_user_by_email(email=email):
+            return user
+        if user := await self._get_user_by_username(username=username):
+            return user
+
+        return None
 
     async def _get_user_by_email(self, email: EmailStr, *, session: AsyncSession | None = None) -> UserDBSchema | None:
         db_user = await self.db.get_one_obj(
@@ -57,12 +65,6 @@ class UserRepository:
 
     @manage_async_session
     async def create(self, user_data: UserCreateSchema, *, session: AsyncSession | None = None) -> UserDBSchema:
-        if user := await self._get_user_by_username(username=user_data.username, session=session):
-            raise UserAlreadyExistsError(message=f'User with such username already exists: {user.username}')
-
-        if user := await self._get_user_by_email(email=user_data.email, session=session):
-            raise UserAlreadyExistsError(message=f'User with such email already exists: {user.email}')
-
         user_model = UserModel(**user_data.model_dump())
         await self.db.create_obj(user_model)
         return await self.get(user_model.id, session=session)

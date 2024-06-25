@@ -4,6 +4,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+from app.schemas.services.auth.role_service_schemas import RoleSchemaBase
+
 
 class LoginType(StrEnum):
     CREDENTIALS = 'credentials'
@@ -15,10 +17,14 @@ class UserCredentialsSchema(BaseModel):
     password: str
 
 
-class RegisterUserCredentialsSchema(BaseModel):
+class CreateUserCredentialsSchema(BaseModel):
     username: str
     email: EmailStr
     password: str
+
+
+class RegisterUserCredentialsSchema(CreateUserCredentialsSchema):
+    pass
 
 
 class UserNewSchema(BaseModel):
@@ -42,7 +48,7 @@ class RefreshLoginDataSchema(BaseLoginDataSchema):
 
 class UserTokenDataSchema(BaseModel):
     login: str
-    roles: list[str]
+    roles: list[RoleSchemaBase]
 
 
 class TokenPairSchema(BaseModel):

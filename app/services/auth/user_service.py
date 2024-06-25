@@ -1,7 +1,11 @@
 import uuid
 
 from app.exceptions import UserAlreadyExistsError
-from app.schemas.api.v1.auth_schemas import HistorySchemaCreate, UserNewSchema
+from app.schemas.api.v1.auth_schemas import (
+    CreateUserCredentialsSchema,
+    HistorySchemaCreate,
+    UserNewSchema,
+)
 from app.schemas.services.auth.user_service_schemas import UserCreateSchema, UserSchema
 from app.schemas.services.repositories.history_repository_schemas import HistoryDBSchema
 from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
@@ -23,6 +27,11 @@ class UserService:
 
     async def get_user(self, login: str) -> UserDBSchema | None:
         return await self.user_repository.get_user_by_login(login)
+
+    async def get_user_by_credentials(self, user_credentials: CreateUserCredentialsSchema) -> UserDBSchema | None:
+        return await self.user_repository.get_user_by_credentials(
+            email=user_credentials.email, username=user_credentials.username
+        )
 
     async def save_login_history(self, history_data: HistorySchemaCreate) -> None:
         await self.history_repository.create(history_data)

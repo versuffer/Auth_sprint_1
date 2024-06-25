@@ -41,8 +41,8 @@ async def register(
 ):
     try:
         return await service.create_user(user_credentials)
-    except UserAlreadyExistsError as err:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=err.message)
+    except UserAlreadyExistsError:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='User already exists')
 
 
 @auth_router.post(
@@ -117,10 +117,12 @@ async def verify_access_token(
     access_token: str = Depends(get_bearer_token),
     service: AuthenticationService = Depends(),
 ):
-    if not await service.verify_access_token(access_token):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+    try:
+        await service.verify_access_token(access_token)
+    except TokenError:
+        raise auth_error
 
-    return {'is_verified': True}
+    return {'detail': 'Successful verification'}
 
 
 @auth_router.post(

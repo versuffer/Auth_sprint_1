@@ -3,14 +3,16 @@ import uuid
 from pydantic import BaseModel, ConfigDict
 
 
-class RoleSchemaCreate(BaseModel):
+class RoleSchemaBase(BaseModel):
     title: str
     description: str
 
     model_config = ConfigDict(from_attributes=True)
 
 
-class RoleSchema(RoleSchemaCreate):
+class RoleSchemaCreate(RoleSchemaBase):
+    pass
+
+
+class RoleSchema(RoleSchemaBase):
     id: uuid.UUID
-    title: str
-    description: str

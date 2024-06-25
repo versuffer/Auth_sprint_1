@@ -84,37 +84,27 @@ class SessionService:
             raise err
 
     async def get_login_from_access_token(self, access_token: str) -> str | None:
-        token_payload = self.jwt_service.get_token_payload(token=access_token)
-        if token_payload:
-            try:
-                refresh_mark = token_payload['refresh']  # noqa
-                raise AccessTokenValidationError
-            except KeyError:
-                if login := token_payload.get('login'):
-                    return login
+        try:
+            token_payload = await self.get_validated_token_payload(token=access_token, check_access=True)
+            return token_payload['login']
+        except TokenError as err:
+            raise err
 
-        # TODO вместо return None нужно рейзить кастомную ошибку
-        return None
-
-    def verify_access_token(self, access_token: str) -> bool:
-        token_payload = self.jwt_service.get_token_payload(token=access_token)
-        if token_payload and 'refresh' not in token_payload:
-            return True
-        return False
+    async def verify_access_token(self, access_token: str) -> None:
+        try:
+            await self.get_validated_token_payload(token=access_token, check_access=True)
+        except TokenError as err:
+            raise err
 
     async def delete_session(self, token: str) -> None:
         try:
-            token_payload = self.jwt_service.get_token_payload(token=token, verify_exp=False)
-        except InvalidTokenError:
-            raise TokenValidationError
+            token_payload = await self.get_validated_token_payload(
+                token=token, check_expired=False, check_session_id=True, check_session_expired=True
+            )
+        except TokenError as err:
+            raise err
 
-        if not (session_id := token_payload.get('session_id')):
-            raise TokenValidationError
-
-        if not await self.redis_repo.get_session(session_id):
-            raise ExpiredSessionError
-
-        await self.redis_repo.delete_session(session_id)
+        await self.redis_repo.delete_session(token_payload['session_id'])
 
 
 session_service = SessionService()
