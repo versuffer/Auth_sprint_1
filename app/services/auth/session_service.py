@@ -9,6 +9,9 @@ from app.exceptions import (
     ExpiredSessionError,
     RefreshTokenValidationError,
     TokenDoesNotContainLogin,
+    TokenDoesNotContainSessionId,
+    TokenError,
+    TokenValidationError,
 )
 from app.schemas.api.v1.auth_schemas import SessionDataSchema, UserTokenDataSchema
 from app.services.utils.jwt_service import jwt_service
@@ -40,25 +43,45 @@ class SessionService:
         await self.redis_repo.save_session(user_login, session_id=session_id)
         return SessionDataSchema(access_token=access_token, refresh_token=refresh_token, session_id=session_id)
 
-    async def get_login_from_refresh_token(self, refresh_token: str) -> str:
+    async def get_validated_token_payload(
+        self,
+        token: str,
+        check_expired: bool = True,
+        check_access: bool = False,
+        check_refresh: bool = False,
+        check_session_id: bool = True,
+        check_session_expired: bool = False,
+        check_login: bool = True,
+    ) -> dict:
         try:
-            token_payload = self.jwt_service.get_token_payload(token=refresh_token)
+            token_payload = self.jwt_service.get_token_payload(token=token, verify_exp=check_expired)
         except InvalidTokenError:
+            raise TokenValidationError
+
+        if check_access and 'refresh' in token_payload:
+            raise AccessTokenValidationError
+
+        if check_refresh and not token_payload.get('refresh') is True:
             raise RefreshTokenValidationError
 
-        if not token_payload.get('refresh') is True:
-            raise RefreshTokenValidationError
+        if check_session_id:
+            if not (session_id := token_payload.get('session_id')):
+                raise TokenDoesNotContainSessionId
 
-        if not (session_id := token_payload.get('session_id')):
-            raise RefreshTokenValidationError
+            if check_session_expired and not await self.redis_repo.get_session(session_id):
+                raise ExpiredSessionError
 
-        if not await self.redis_repo.get_session(session_id):
-            raise ExpiredSessionError
-
-        if not (login := token_payload.get('login')):
+        if check_login and not token_payload.get('login'):
             raise TokenDoesNotContainLogin
 
-        return login
+        return token_payload
+
+    async def get_login_from_refresh_token(self, refresh_token: str) -> str:
+        try:
+            token_payload = await self.get_validated_token_payload(token=refresh_token, check_refresh=True)
+            return token_payload['login']
+        except TokenError as err:
+            raise err
 
     async def get_login_from_access_token(self, access_token: str) -> str | None:
         token_payload = self.jwt_service.get_token_payload(token=access_token)
@@ -79,9 +102,16 @@ class SessionService:
             return True
         return False
 
-    async def delete_session(self, token: str) -> str:
-        token_payload = self.jwt_service.get_token_payload(token=token, verify_exp=False)
-        if session_id := token_payload.get('session_id'):
-            await self.redis_repo.delete_session(session_id)
+    async def delete_session(self, token: str) -> None:
+        try:
+            token_payload = self.jwt_service.get_token_payload(token=token, verify_exp=False)
+        except InvalidTokenError:
+            raise TokenValidationError
 
-        return session_id
+        if not (session_id := token_payload.get('session_id')):
+            raise TokenValidationError
+
+        if not await self.redis_repo.get_session(session_id):
+            raise ExpiredSessionError
+
+        await self.redis_repo.delete_session(session_id)

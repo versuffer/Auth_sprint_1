@@ -30,7 +30,7 @@ class JWTService:
             expire_time=base_expire_time + timedelta(seconds=app_settings.JWT_REFRESH_TOKEN_EXPIRE_TIME_SECONDS),
         )
 
-    def get_token_payload(self, token: str, verify_exp: bool = True) -> dict | None:
+    def get_token_payload(self, token: str, verify_exp: bool = True) -> dict:
         try:
             return jwt.decode(
                 jwt=token,

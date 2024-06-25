@@ -2,9 +2,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, status
 
 from app.api.docs.tags import ApiTags
 from app.exceptions import (
-    ExpiredSessionError,
-    RefreshTokenValidationError,
-    TokenDoesNotContainLogin,
+    TokenError,
     UserAlreadyExistsError,
     UserNotFoundError,
     WrongPasswordError,
@@ -87,31 +85,36 @@ async def refresh(
     )
     try:
         return await service.authenticate_by_refresh_token(login_data=login_data)
-    except (UserNotFoundError, RefreshTokenValidationError, TokenDoesNotContainLogin, ExpiredSessionError):
+    except (TokenError, UserNotFoundError):
         raise auth_error
 
 
 @auth_router.post(
     '/logout',
     status_code=status.HTTP_200_OK,
-    summary='Инвалидировать сессию пользователя по access-токену',
+    summary='Удалить сессию пользователя по токену',
     tags=[ApiTags.V1_AUTH],
 )
 async def logout(
-    access_token: str,  # TODO
+    token: str = Depends(get_bearer_token),
     service: AuthenticationService = Depends(),
 ):
-    return {'session_id': await service.logout(access_token)}
+    try:
+        await service.logout(token)
+    except TokenError:
+        raise auth_error
+
+    return {'detail': 'Successful logout'}
 
 
 @auth_router.post(
-    '/verify_access_token',
+    '/verify/access_token',
     status_code=status.HTTP_200_OK,
-    summary='Проверить пользователя по access-токену',
+    summary='Проверить access-токен',
     tags=[ApiTags.V1_AUTH],
 )
 async def verify_access_token(
-    access_token: str,  # TODO
+    access_token: str = Depends(get_bearer_token),
     service: AuthenticationService = Depends(),
 ):
     if not await service.verify_access_token(access_token):

@@ -1,13 +1,7 @@
 import datetime
 import uuid
 
-from app.exceptions import (
-    ExpiredSessionError,
-    RefreshTokenValidationError,
-    TokenDoesNotContainLogin,
-    UserNotFoundError,
-    WrongPasswordError,
-)
+from app.exceptions import TokenError, UserNotFoundError, WrongPasswordError
 from app.schemas.api.v1.auth_schemas import (
     CredentialsLoginDataSchema,
     HistorySchema,
@@ -57,11 +51,14 @@ class AuthenticationService:
         )  # TODO сделать фоновой таской
 
     async def authenticate_by_credentials(self, login_data: CredentialsLoginDataSchema) -> TokenPairSchema:
-        user = await self._get_user(login=login_data.login)
-        self._verify_user_password(user=user, password=login_data.password)
-        session_data = await self._create_session(user=user)
-        await self._save_user_login_history(user=user, login_data=login_data, session_id=session_data.session_id)
-        return TokenPairSchema(**session_data.model_dump())
+        try:
+            user = await self._get_user(login=login_data.login)
+            self._verify_user_password(user=user, password=login_data.password)
+            session_data = await self._create_session(user=user)
+            await self._save_user_login_history(user=user, login_data=login_data, session_id=session_data.session_id)
+            return TokenPairSchema(**session_data.model_dump())
+        except (UserNotFoundError, WrongPasswordError) as err:
+            raise err
 
     async def authenticate_by_refresh_token(self, login_data: RefreshLoginDataSchema) -> TokenPairSchema:
         try:
@@ -71,11 +68,14 @@ class AuthenticationService:
             await self.session_service.delete_session(token=login_data.refresh_token)
             await self._save_user_login_history(user=user, login_data=login_data, session_id=session_data.session_id)
             return TokenPairSchema(**session_data.model_dump())
-        except (RefreshTokenValidationError, TokenDoesNotContainLogin, UserNotFoundError, ExpiredSessionError) as err:
+        except (TokenError, UserNotFoundError) as err:
             raise err
 
-    async def logout(self, access_token: str) -> str:
-        return await self.session_service.delete_session(access_token)
+    async def logout(self, token: str) -> None:
+        try:
+            await self.session_service.delete_session(token)
+        except TokenError as err:
+            raise err
 
     async def verify_access_token(self, access_token: str) -> bool:
         return self.session_service.verify_access_token(access_token)

@@ -24,19 +24,31 @@ class WrongPasswordError(BaseError):
     pass
 
 
-class RefreshTokenValidationError(BaseError):
+class TokenError(BaseError):
     pass
 
 
-class TokenDoesNotContainLogin(BaseError):
+class TokenValidationError(TokenError):
     pass
 
 
-class ExpiredSessionError(BaseError):
+class RefreshTokenValidationError(TokenValidationError):
     pass
 
 
-class AccessTokenValidationError(BaseError):
+class AccessTokenValidationError(TokenValidationError):
+    pass
+
+
+class TokenDoesNotContainSessionId(TokenError):
+    pass
+
+
+class TokenDoesNotContainLogin(TokenError):
+    pass
+
+
+class ExpiredSessionError(TokenError):
     pass
 
 
