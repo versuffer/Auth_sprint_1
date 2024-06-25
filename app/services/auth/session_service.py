@@ -1,9 +1,15 @@
 import uuid
 from datetime import datetime
 
-from app.core.config import app_settings
+from jwt import InvalidTokenError
+
 from app.db.redis.redis_repo import RedisRepository
-from app.exceptions import AccessTokenValidationError, RefreshTokenValidationError
+from app.exceptions import (
+    AccessTokenValidationError,
+    ExpiredSessionError,
+    RefreshTokenValidationError,
+    TokenDoesNotContainLogin,
+)
 from app.schemas.api.v1.auth_schemas import SessionDataSchema, UserTokenDataSchema
 from app.services.utils.jwt_service import jwt_service
 
@@ -11,7 +17,7 @@ from app.services.utils.jwt_service import jwt_service
 class SessionService:
     def __init__(self):
         self.jwt_service = jwt_service
-        self.redis_repo = RedisRepository(app_settings.REDIS_DSN)
+        self.redis_repo = RedisRepository()
 
     async def create_session(self, user_token_data: UserTokenDataSchema) -> SessionDataSchema:
         user_login = user_token_data.login
@@ -34,16 +40,25 @@ class SessionService:
         await self.redis_repo.save_session(user_login, session_id=session_id)
         return SessionDataSchema(access_token=access_token, refresh_token=refresh_token, session_id=session_id)
 
-    async def get_login_from_refresh_token(self, refresh_token: str) -> str | None:
-        token_payload = self.jwt_service.get_token_payload(token=refresh_token)
-        if token_payload and token_payload.get('refresh') is True:
-            if login := token_payload.get('login'):
-                return login
-
+    async def get_login_from_refresh_token(self, refresh_token: str) -> str:
+        try:
+            token_payload = self.jwt_service.get_token_payload(token=refresh_token)
+        except InvalidTokenError:
             raise RefreshTokenValidationError
 
-        # TODO вместо return None нужно рейзить кастомную ошибку
-        return None
+        if not token_payload.get('refresh') is True:
+            raise RefreshTokenValidationError
+
+        if not (session_id := token_payload.get('session_id')):
+            raise RefreshTokenValidationError
+
+        if not await self.redis_repo.get_session(session_id):
+            raise ExpiredSessionError
+
+        if not (login := token_payload.get('login')):
+            raise TokenDoesNotContainLogin
+
+        return login
 
     async def get_login_from_access_token(self, access_token: str) -> str | None:
         token_payload = self.jwt_service.get_token_payload(token=access_token)
@@ -64,8 +79,8 @@ class SessionService:
             return True
         return False
 
-    async def delete_session(self, access_token: str) -> str:
-        token_payload = self.jwt_service.get_token_payload(token=access_token, verify_exp=False)
+    async def delete_session(self, token: str) -> str:
+        token_payload = self.jwt_service.get_token_payload(token=token, verify_exp=False)
         if session_id := token_payload.get('session_id'):
             await self.redis_repo.delete_session(session_id)
 

@@ -28,6 +28,14 @@ class RefreshTokenValidationError(BaseError):
     pass
 
 
+class TokenDoesNotContainLogin(BaseError):
+    pass
+
+
+class ExpiredSessionError(BaseError):
+    pass
+
+
 class AccessTokenValidationError(BaseError):
     pass
 

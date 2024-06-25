@@ -1,21 +1,31 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 
 from app.api.docs.tags import ApiTags
-from app.exceptions import UserAlreadyExistsError, UserNotFoundError, WrongPasswordError
+from app.exceptions import (
+    ExpiredSessionError,
+    RefreshTokenValidationError,
+    TokenDoesNotContainLogin,
+    UserAlreadyExistsError,
+    UserNotFoundError,
+    WrongPasswordError,
+)
 from app.schemas.api.v1.auth_schemas import (
     CredentialsLoginDataSchema,
     HistoryResponseSchema,
+    LoginType,
     RefreshLoginDataSchema,
     RegisterResponseSchema,
     RegisterUserCredentialsSchema,
     ResetPasswordSchema,
     ResetUsernameSchema,
     TokenPairSchema,
+    UserCredentialsSchema,
     UserNewSchema,
 )
 from app.services.auth.auth_service import AuthenticationService
 from app.services.auth.registration_service import RegistrationService
 from app.services.auth.user_public_service import UserPublicService
+from app.services.fastapi.dependencies import auth_error, get_bearer_token
 
 auth_router = APIRouter(prefix='/auth')
 
@@ -46,17 +56,19 @@ async def register(
     tags=[ApiTags.V1_AUTH],
 )
 async def login(
-    user_credentials: CredentialsLoginDataSchema,
+    user_credentials: UserCredentialsSchema,
+    user_agent: str = Header(),
     service: AuthenticationService = Depends(),
 ):
+    login_data = CredentialsLoginDataSchema(
+        **user_credentials.model_dump(),
+        user_agent=user_agent,
+        login_type=LoginType.CREDENTIALS,
+    )
     try:
-        return await service.authenticate_by_credentials(user_credentials)
-    except WrongPasswordError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Неверный пароль')
-    except UserNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователя с таким логином не существует.'
-        )
+        return await service.authenticate_by_credentials(login_data=login_data)
+    except (WrongPasswordError, UserNotFoundError):
+        raise auth_error
 
 
 @auth_router.post(
@@ -67,15 +79,17 @@ async def login(
     tags=[ApiTags.V1_AUTH],
 )
 async def refresh(
-    user_credentials: RefreshLoginDataSchema,
+    refresh_token: str = Depends(get_bearer_token),
+    user_agent: str = Header(),
     service: AuthenticationService = Depends(),
 ):
+    login_data = RefreshLoginDataSchema(
+        refresh_token=refresh_token, user_agent=user_agent, login_type=LoginType.REFRESH
+    )
     try:
-        return await service.authenticate_by_refresh_token(user_credentials)
-    except UserNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователя с таким логином не существует.'
-        )
+        return await service.authenticate_by_refresh_token(login_data=login_data)
+    except (UserNotFoundError, RefreshTokenValidationError, TokenDoesNotContainLogin, ExpiredSessionError):
+        raise auth_error
 
 
 @auth_router.post(

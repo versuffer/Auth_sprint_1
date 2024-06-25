@@ -39,8 +39,8 @@ class JWTService:
                 require=['exp'],
                 options={'verify_exp': verify_exp},
             )
-        except InvalidTokenError:
-            return None
+        except InvalidTokenError as err:
+            raise err
 
 
 jwt_service = JWTService()

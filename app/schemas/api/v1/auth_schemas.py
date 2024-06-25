@@ -28,7 +28,7 @@ class UserNewSchema(BaseModel):
 
 
 class BaseLoginDataSchema(BaseModel):
-    user_agent: str  # TODO правильно доставать юзер агент
+    user_agent: str
     login_type: LoginType
 
 

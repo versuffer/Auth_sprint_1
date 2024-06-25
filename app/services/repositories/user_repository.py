@@ -18,7 +18,7 @@ class UserRepository:
     def __init__(self):
         self.db: PostgresRepository = PostgresRepository()
 
-    async def get_user_by_login(self, login: str, *, session: AsyncSession | None = None) -> UserDBSchema | None:
+    async def get_user_by_login(self, login: str) -> UserDBSchema | None:
         email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
 
         if re.match(email_pattern, login) is not None:
