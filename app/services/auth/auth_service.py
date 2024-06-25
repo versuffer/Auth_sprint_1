@@ -12,17 +12,16 @@ from app.schemas.api.v1.auth_schemas import (
     UserTokenDataSchema,
 )
 from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
-from app.services.auth.session_service import SessionService
-from app.services.auth.user_service import UserService
+from app.services.auth.session_service import session_service
+from app.services.auth.user_service import user_service
 from app.services.utils.password_service import password_service
 
 
 class AuthenticationService:
     def __init__(self):
         self.password_service = password_service
-        self.user_service = UserService()
-        self.session_service = SessionService()
-        self.user: UserDBSchema | None = None
+        self.user_service = user_service
+        self.session_service = session_service
 
     async def _get_user(self, login: str) -> UserDBSchema:
         if not (user := await self.user_service.get_user(login)):

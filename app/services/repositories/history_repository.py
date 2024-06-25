@@ -3,12 +3,15 @@ from app.db.postgres.models.users import HistoryModel
 from app.schemas.api.v1.auth_schemas import HistorySchemaCreate
 from app.schemas.services.repositories.history_repository_schemas import HistoryDBSchema
 from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
-from app.services.repositories.postgres_repository import PostgresRepository
+from app.services.repositories.postgres_repository import (
+    PostgresRepository,
+    postgres_repository,
+)
 
 
 class HistoryRepository:
     def __init__(self):
-        self.db: PostgresRepository = PostgresRepository()
+        self.db: PostgresRepository = postgres_repository
 
     async def get(self, user: UserDBSchema) -> list[HistoryDBSchema]:
         history = await self.db.get_all_obj(HistoryModel, where_value=[(HistoryModel.user_id, user.id)])
@@ -27,3 +30,6 @@ class HistoryRepository:
         except Exception as err:
             logger.error('Oops do not create history %s', err)
             return None
+
+
+history_repository = HistoryRepository()

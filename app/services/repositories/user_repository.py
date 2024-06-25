@@ -11,12 +11,15 @@ from app.db.postgres.models.users import UserModel, UserRoleAssociationModel
 from app.exceptions import RoleAlreadyExistError, UserAlreadyExistsError
 from app.schemas.services.auth.user_service_schemas import UserCreateSchema
 from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
-from app.services.repositories.postgres_repository import PostgresRepository
+from app.services.repositories.postgres_repository import (
+    PostgresRepository,
+    postgres_repository,
+)
 
 
 class UserRepository:
     def __init__(self):
-        self.db: PostgresRepository = PostgresRepository()
+        self.db: PostgresRepository = postgres_repository
 
     async def get_user_by_login(self, login: str) -> UserDBSchema | None:
         email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -91,3 +94,6 @@ class UserRepository:
         except Exception as err:
             logger.error('Can not delete role_id=%s error=%s', role_id, err)
             return None
+
+
+user_repository = UserRepository()

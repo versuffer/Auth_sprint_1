@@ -54,3 +54,6 @@ class PostgresRepository:
     async def delete_obj(self, model, *, session: AsyncSession | None = None, **kwargs) -> None:
         query = self._build_query(model, action=delete, **kwargs)
         await session.execute(query)
+
+
+postgres_repository = PostgresRepository()

@@ -7,12 +7,15 @@ from app.core.logs import logger
 from app.db.postgres.models.users import RoleModel, UserRoleAssociationModel
 from app.exceptions import RoleAlreadyExistError
 from app.schemas.services.auth.role_service_schemas import RoleSchema, RoleSchemaCreate
-from app.services.repositories.postgres_repository import PostgresRepository
+from app.services.repositories.postgres_repository import (
+    PostgresRepository,
+    postgres_repository,
+)
 
 
 class RoleRepository:
     def __init__(self):
-        self.db: PostgresRepository = PostgresRepository()
+        self.db: PostgresRepository = postgres_repository
 
     async def _check_exists_role(self, *, role_id: UUID | None = None, role_title: str | None = None) -> bool:
         if not role_id and not role_title:
@@ -61,3 +64,6 @@ class RoleRepository:
         except Exception as err:
             logger.error('Can not delete role_id=%s error=%s', role_id, err)
             return False
+
+
+role_repository = RoleRepository()

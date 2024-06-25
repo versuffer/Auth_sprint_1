@@ -115,3 +115,6 @@ class SessionService:
             raise ExpiredSessionError
 
         await self.redis_repo.delete_session(session_id)
+
+
+session_service = SessionService()

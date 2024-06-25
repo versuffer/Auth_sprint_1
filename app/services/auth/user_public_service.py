@@ -4,13 +4,13 @@ from app.schemas.api.v1.auth_schemas import (
     ResetUsernameSchema,
     UserNewSchema,
 )
-from app.services.auth.user_service import UserService
+from app.services.auth.user_service import user_service
 from app.services.utils.password_service import password_service
 
 
 class UserPublicService:
     def __init__(self):
-        self.user_service = UserService()
+        self.user_service = user_service
         self.password_service = password_service
 
     async def reset_username(self, reset_schema: ResetUsernameSchema) -> UserNewSchema:

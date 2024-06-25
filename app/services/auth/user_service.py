@@ -5,14 +5,14 @@ from app.schemas.api.v1.auth_schemas import HistorySchemaCreate, UserNewSchema
 from app.schemas.services.auth.user_service_schemas import UserCreateSchema, UserSchema
 from app.schemas.services.repositories.history_repository_schemas import HistoryDBSchema
 from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
-from app.services.repositories.history_repository import HistoryRepository
-from app.services.repositories.user_repository import UserRepository
+from app.services.repositories.history_repository import history_repository
+from app.services.repositories.user_repository import user_repository
 
 
 class UserService:
     def __init__(self):
-        self.user_repository = UserRepository()
-        self.history_repository = HistoryRepository()
+        self.user_repository = user_repository
+        self.history_repository = history_repository
 
     async def create(self, user_data: UserCreateSchema) -> UserSchema:
         try:
@@ -41,3 +41,6 @@ class UserService:
     async def set_password(self, user_id: uuid.UUID, new_password: str) -> UserNewSchema:
         user = await self.user_repository.update(user_id, {'hashed_password': new_password})
         return UserNewSchema(login=user.login, hashed_password=user.hashed_password)
+
+
+user_service = UserService()
