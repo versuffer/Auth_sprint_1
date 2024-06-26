@@ -39,7 +39,7 @@ class HistoryModel(Base):
     user_agent: Mapped[text] = mapped_column(nullable=False)
     login_type: Mapped[text] = mapped_column(nullable=False)  # Login by credentials or refresh-token
     session_id: Mapped[UUID] = mapped_column(nullable=False)
-    auth_at: Mapped[datetime] = mapped_column(nullable=False)
+    auth_date: Mapped[datetime] = mapped_column(nullable=False)
 
     # many-to-one
     user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id'), nullable=False)

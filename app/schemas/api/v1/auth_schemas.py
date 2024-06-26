@@ -2,7 +2,7 @@ import datetime
 import uuid
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 from app.schemas.services.auth.role_service_schemas import RoleSchemaBase
 from app.schemas.services.auth.user_service_schemas import UserSchema
@@ -71,7 +71,6 @@ class RegisterResponseSchema(BaseModel):
     id: uuid.UUID
     username: str
     email: EmailStr
-    is_superuser: bool
 
 
 class HistorySchemaCreate(BaseModel):
@@ -84,7 +83,7 @@ class HistorySchemaCreate(BaseModel):
 
 class HistorySchema(BaseModel):
     id: uuid.UUID
-    auth_at: datetime.datetime = Field(serialization_alias='auth_date')  # TODO поменять в миграции на auth_date
+    auth_date: datetime.datetime
     user_agent: str
 
     model_config = ConfigDict(from_attributes=True)

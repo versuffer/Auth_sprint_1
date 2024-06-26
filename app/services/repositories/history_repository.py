@@ -21,7 +21,7 @@ class HistoryRepository:
         try:
             add_history = HistoryModel(
                 user_id=history_data.user_id,
-                auth_at=history_data.auth_date,
+                auth_date=history_data.auth_date,
                 user_agent=history_data.user_agent,
                 login_type=history_data.login_type,
                 session_id=history_data.session_id,
