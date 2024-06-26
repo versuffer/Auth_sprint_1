@@ -3,12 +3,14 @@ import uuid
 from app.exceptions import (
     RoleAlreadyAssignedError,
     RoleAlreadyExistsError,
+    RoleNotAssignedError,
     RoleNotFoundError,
     UserNotFoundError,
 )
 from app.schemas.services.auth.role_service_schemas import RoleSchema, RoleSchemaCreate
 from app.services.repositories.role_repository import role_repository
 from app.services.repositories.user_repository import user_repository
+from app.services.repositories.user_role_repository import user_role_repository
 
 
 class RoleService:
@@ -41,6 +43,7 @@ class UserRoleService:
     def __init__(self):
         self.user_repository = user_repository
         self.role_repository = role_repository
+        self.user_role_repository = user_role_repository
 
     async def get_user_roles(self, user_id: uuid.UUID) -> list[RoleSchema]:
         if not (user := await self.user_repository.get(user_id)):
@@ -54,7 +57,7 @@ class UserRoleService:
             raise RoleNotFoundError
 
         try:
-            await self.user_repository.assign_role_to_user(user_id, role_id)
+            await self.user_role_repository.assign_user_role(user_id, role_id)
         except RoleAlreadyAssignedError as err:
             raise err
 
@@ -64,4 +67,7 @@ class UserRoleService:
         if not await self.role_repository.get(role_id):
             raise RoleNotFoundError
 
-        await self.user_repository.revoke_role_from_user(user_id, role_id)
+        try:
+            await self.user_role_repository.revoke_user_role(user_id, role_id)
+        except RoleNotAssignedError as err:
+            raise err

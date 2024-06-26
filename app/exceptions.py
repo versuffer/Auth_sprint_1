@@ -64,6 +64,10 @@ class RoleAlreadyAssignedError(BaseError):
     pass
 
 
+class RoleNotAssignedError(BaseError):
+    pass
+
+
 class AuthorizationError(BaseError):
     pass
 
@@ -75,3 +79,4 @@ role_not_found_error = HTTPException(status_code=status.HTTP_404_NOT_FOUND, deta
 user_already_exists_error = HTTPException(status_code=status.HTTP_409_CONFLICT, detail='User already exists')
 role_already_exists_error = HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Role already exists')
 role_already_assigned_error = HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Role already assigned')
+role_not_assigned_error = HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Role not assigned')
