@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 
 from app.api.docs.tags import ApiTags
 from app.exceptions import (
@@ -36,6 +36,10 @@ async def get_roles(
 ):
     try:
         await auth_service.authorize_superuser(access_token=access_token)
+    except (TokenError, UserNotFoundError, AuthorizationError):
+        raise auth_error
+
+    try:
         return await role_service.get_roles()
     except (TokenError, UserNotFoundError, AuthorizationError):
         raise auth_error
@@ -56,9 +60,11 @@ async def get_role(
 ):
     try:
         await auth_service.authorize_superuser(access_token=access_token)
-        return await role_service.get_role(role_id)
     except (TokenError, UserNotFoundError, AuthorizationError):
         raise auth_error
+
+    try:
+        return await role_service.get_role(role_id)
     except RoleNotFoundError:
         raise not_found_error
 
@@ -78,6 +84,10 @@ async def create_role(
 ):
     try:
         await auth_service.authorize_superuser(access_token=access_token)
+    except (TokenError, UserNotFoundError, AuthorizationError):
+        raise auth_error
+
+    try:
         return await role_service.create_role(role_data)
     except RoleAlreadyExistsError:
         raise role_already_exists_error
@@ -91,7 +101,17 @@ async def create_role(
 )
 async def delete_role(
     role_id: UUID,
-    service: RoleService = Depends(),
-    # access_token: AuthorizationHeader (только для суперпользователей)
+    access_token: str = Depends(get_bearer_token),
+    auth_service: AuthenticationService = Depends(),
+    role_service: RoleService = Depends(),
 ):
-    return await service.delete_role(role_id)
+    try:
+        await auth_service.authorize_superuser(access_token=access_token)
+    except (TokenError, UserNotFoundError, AuthorizationError):
+        raise auth_error
+
+    try:
+        await role_service.delete_role(role_id)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except RoleNotFoundError:
+        raise not_found_error

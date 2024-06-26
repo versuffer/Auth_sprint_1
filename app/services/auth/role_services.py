@@ -30,6 +30,9 @@ class RoleService:
         return await self.role_repository.create(role_data)
 
     async def delete_role(self, role_id: uuid.UUID) -> bool:
+        if not await self.role_repository.get(role_id):
+            raise RoleNotFoundError
+
         return await self.role_repository.delete(role_id)
 
 
