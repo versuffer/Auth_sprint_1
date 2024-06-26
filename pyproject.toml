@@ -24,14 +24,34 @@ pyjwt = "2.8.0"
 argon2-cffi = "23.1.0"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "*"
+# CI helpers
+pre-commit = "*"
+
+# Code formatting
 isort = "*"
 black = "*"
 flake8 = "*"
+flake8-aaa = "*"
+flake8-pytest-style = "*"
 flake8-pyproject = "*"
+
+# Security
 bandit = "*"
+
+# Type checking
 mypy = "*"
 types-redis = "*"
+
+# Testing
+pytest = "*"
+pytest-env = "*"  # подменяет реальные энвы на тестовые при запуске пайтест-сессии
+pytest-mock = "*"  # предоставляет фикстуру (mocker) для создания мок-объектов
+pytest-xdist = "*"  # позволяет запускать тесты в несколько потоков
+pytest-randomly = "*"  # запускает тесты в случайном порядке + позволяет задать seed для всех инстансов random
+faker = "*"  # генерация случайных тестовых данных
+polyfactory = "*"  # библиотека для быстрого создания фабрик на основе pydantic-схем
+pytest-fixture-classes = "*"  # позволяет писать фикстуры виде классов
+pytest-icdiff = "*"  # выводит более приятные различия в между словарями
 
 [tool.isort]
 profile = 'black'
@@ -50,3 +70,7 @@ ignore_missing_imports = true
 plugins = [
     "pydantic.mypy"
 ]
+
+[tool.pytest_env]
+REDIS_DB="15"
+POSTGRES_DB="test_auth_database"

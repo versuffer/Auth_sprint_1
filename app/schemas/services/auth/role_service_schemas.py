@@ -15,7 +15,7 @@ class CreateRoleSchema(RoleSchemaBase):
 
 
 class PartialUpdateRoleSchema(BaseModel):
-    title: str = Field(default=None)
+    title: str = Field(default='')
     description: str | None = Field(default=None)
 
 

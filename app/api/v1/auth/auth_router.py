@@ -36,7 +36,7 @@ auth_router = APIRouter(prefix='/auth')
     response_model=RegisterResponseSchema,
     tags=[ApiTags.V1_AUTH],
 )
-async def register(
+async def api_v1_register(
     user_credentials: RegisterUserCredentialsSchema,
     service: RegistrationService = Depends(),
 ):
@@ -53,7 +53,7 @@ async def register(
     response_model=TokenPairSchema,
     tags=[ApiTags.V1_AUTH],
 )
-async def login(
+async def api_v1_login(
     user_credentials: UserCredentialsSchema,
     user_agent: str = Header(),
     service: AuthenticationService = Depends(),
@@ -76,7 +76,7 @@ async def login(
     response_model=TokenPairSchema,
     tags=[ApiTags.V1_AUTH],
 )
-async def refresh(
+async def api_v1_refresh(
     refresh_token: str = Depends(get_bearer_token),
     user_agent: str = Header(),
     service: AuthenticationService = Depends(),
@@ -96,7 +96,7 @@ async def refresh(
     summary='Удалить сессию пользователя по токену',
     tags=[ApiTags.V1_AUTH],
 )
-async def logout(
+async def api_v1_logout(
     token: str = Depends(get_bearer_token),
     service: AuthenticationService = Depends(),
 ):
@@ -114,7 +114,7 @@ async def logout(
     summary='Проверить access-токен',
     tags=[ApiTags.V1_AUTH],
 )
-async def verify_access_token(
+async def api_v1_verify_access_token(
     access_token: str = Depends(get_bearer_token),
     service: AuthenticationService = Depends(),
 ):
@@ -133,7 +133,7 @@ async def verify_access_token(
     response_model=ResetResponseSchema,
     tags=[ApiTags.V1_AUTH],
 )
-async def reset_username(
+async def api_v1_reset_username(
     reset_schema: ResetUsernameSchema,
     service: AuthenticationService = Depends(),
 ):
@@ -152,7 +152,7 @@ async def reset_username(
     response_model=ResetResponseSchema,
     tags=[ApiTags.V1_AUTH],
 )
-async def reset_password(
+async def api_v1_reset_password(
     reset_schema: ResetPasswordSchema,
     service: AuthenticationService = Depends(),
 ):
@@ -169,7 +169,7 @@ async def reset_password(
     response_model=list[HistoryResponseSchema],
     tags=[ApiTags.V1_AUTH],
 )
-async def get_history(access_token: str = Depends(get_bearer_token), service: AuthenticationService = Depends()):
+async def api_v1_get_history(access_token: str = Depends(get_bearer_token), service: AuthenticationService = Depends()):
     try:
         return await service.get_history(access_token)
     except (TokenError, UserNotFoundError):
