@@ -1,13 +1,11 @@
 import asyncio
 from functools import wraps
 
-import anyio
 import typer
 from sqlalchemy.exc import IntegrityError
 
 from app.core.config import app_settings
 from app.core.logs import logger
-
 from app.schemas.services.auth.user_service_schemas import SuperUserCreateSchema
 from app.services.repositories.user_repository import UserRepository
 
@@ -16,6 +14,7 @@ cli_app = typer.Typer()
 
 def admin_required(func):
     """Проверка прав для выполнения команд."""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         if app_settings.IS_ADMIN is not True or not app_settings.ADMIN_CLI_PASSWORD:
@@ -26,6 +25,7 @@ def admin_required(func):
             print('The password is incorrect.')
             return
         return func(*args, **kwargs)
+
     return wrapper
 
 

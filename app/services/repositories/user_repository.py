@@ -4,10 +4,11 @@ from email_validator import EmailNotValidError, validate_email
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.logs import logger
-from app.db.postgres.models.users import UserModel, UserRoleAssociationModel
-from app.exceptions import RoleAlreadyExistsError
-from app.schemas.services.auth.user_service_schemas import UserCreateSchema, SuperUserCreateSchema
+from app.db.postgres.models.users import UserModel
+from app.schemas.services.auth.user_service_schemas import (
+    SuperUserCreateSchema,
+    UserCreateSchema,
+)
 from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
 from app.services.repositories.postgres_repository import (
     PostgresRepository,
