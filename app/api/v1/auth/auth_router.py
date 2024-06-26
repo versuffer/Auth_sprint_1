@@ -6,6 +6,8 @@ from app.exceptions import (
     UserAlreadyExistsError,
     UserNotFoundError,
     WrongPasswordError,
+    auth_error,
+    user_already_exists_error,
 )
 from app.schemas.api.v1.auth_schemas import (
     CredentialsLoginDataSchema,
@@ -15,15 +17,14 @@ from app.schemas.api.v1.auth_schemas import (
     RegisterResponseSchema,
     RegisterUserCredentialsSchema,
     ResetPasswordSchema,
+    ResetResponseSchema,
     ResetUsernameSchema,
     TokenPairSchema,
     UserCredentialsSchema,
-    UserNewSchema,
 )
 from app.services.auth.auth_service import AuthenticationService
 from app.services.auth.registration_service import RegistrationService
-from app.services.auth.user_public_service import UserPublicService
-from app.services.fastapi.dependencies import auth_error, get_bearer_token
+from app.services.fastapi.dependencies import get_bearer_token
 
 auth_router = APIRouter(prefix='/auth')
 
@@ -42,7 +43,7 @@ async def register(
     try:
         return await service.create_user(user_credentials)
     except UserAlreadyExistsError:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='User already exists')
+        raise user_already_exists_error
 
 
 @auth_router.post(
@@ -129,40 +130,36 @@ async def verify_access_token(
     '/reset/username',
     status_code=status.HTTP_200_OK,
     summary='Поменять имя пользователя',
-    response_model=UserNewSchema,
+    response_model=ResetResponseSchema,
     tags=[ApiTags.V1_AUTH],
 )
 async def reset_username(
     reset_schema: ResetUsernameSchema,
-    service: UserPublicService = Depends(),
-    # access_token: AuthorizationHeader,
+    service: AuthenticationService = Depends(),
 ):
     try:
         return await service.reset_username(reset_schema)
-    except UserNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователя с таким логином не существует.'
-        )
+    except (WrongPasswordError, UserNotFoundError):
+        raise auth_error
+    except UserAlreadyExistsError:
+        raise user_already_exists_error
 
 
 @auth_router.post(
     '/reset/password',
     status_code=status.HTTP_200_OK,
     summary='Поменять пароль пользователя',
-    response_model=UserNewSchema,
+    response_model=ResetResponseSchema,
     tags=[ApiTags.V1_AUTH],
 )
 async def reset_password(
     reset_schema: ResetPasswordSchema,
-    # access_token: AuthorizationHeader,
-    service: UserPublicService = Depends(),
+    service: AuthenticationService = Depends(),
 ):
     try:
         return await service.reset_password(reset_schema)
-    except UserNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователя с таким логином и паролем не существует.'
-        )
+    except (WrongPasswordError, UserNotFoundError):
+        raise auth_error
 
 
 @auth_router.get(

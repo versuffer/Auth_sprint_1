@@ -1,3 +1,7 @@
+from fastapi import HTTPException
+from starlette import status
+
+
 class BaseError(Exception):
     message: str = 'Base Error'
 
@@ -54,3 +58,7 @@ class ExpiredSessionError(TokenError):
 
 class RoleAlreadyExistError(BaseError):
     pass
+
+
+auth_error = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Unauthorized')
+user_already_exists_error = HTTPException(status_code=status.HTTP_409_CONFLICT, detail='User already exists')

@@ -70,12 +70,8 @@ class UserRepository:
         return await self.get(user_model.id)
 
     async def update(self, user_id: UUID, data: dict) -> UserDBSchema | None:
-        try:
-            await self.db.update_obj(UserModel, where_value=[(UserModel.id, user_id)], update_values=data)
-            return await self.get(user_id)
-        except IntegrityError:
-            # logger.error(UserAlreadyExist('User already exist'))
-            return None
+        await self.db.update_obj(UserModel, where_value=[(UserModel.id, user_id)], update_values=data)
+        return await self.get(user_id)
 
     async def add_user_role(self, user_id: UUID, role_id: UUID) -> UserDBSchema | None:
         try:

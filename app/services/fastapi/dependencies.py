@@ -1,6 +1,6 @@
-from fastapi import HTTPException, Request, status
+from fastapi import Request
 
-auth_error = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Unauthorized')
+from app.exceptions import auth_error
 
 
 def get_bearer_token(request: Request) -> str:

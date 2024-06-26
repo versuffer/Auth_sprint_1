@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 from app.schemas.services.auth.role_service_schemas import RoleSchema
 
@@ -11,6 +11,8 @@ class UserSchema(BaseModel):
     email: EmailStr
     is_superuser: bool
     roles: list[RoleSchema]
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserCreateSchema(BaseModel):

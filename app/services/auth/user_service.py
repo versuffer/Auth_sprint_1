@@ -4,7 +4,6 @@ from app.exceptions import UserAlreadyExistsError
 from app.schemas.api.v1.auth_schemas import (
     CreateUserCredentialsSchema,
     HistorySchemaCreate,
-    UserNewSchema,
 )
 from app.schemas.services.auth.user_service_schemas import UserCreateSchema, UserSchema
 from app.schemas.services.repositories.history_repository_schemas import HistoryDBSchema
@@ -20,8 +19,8 @@ class UserService:
 
     async def create(self, user_data: UserCreateSchema) -> UserSchema:
         try:
-            user_db_schema = await self.user_repository.create(user_data)
-            return UserSchema(**user_db_schema.model_dump())
+            user = await self.user_repository.create(user_data)
+            return UserSchema.model_validate(user)
         except UserAlreadyExistsError as err:
             raise err
 
@@ -39,13 +38,16 @@ class UserService:
     async def get_history(self, user: UserDBSchema) -> list[HistoryDBSchema]:
         return await self.history_repository.get(user)
 
-    async def set_username(self, user_id: uuid.UUID, new_username: str) -> UserNewSchema:
-        user = await self.user_repository.update(user_id, {'login': new_username})
-        return UserNewSchema(login=user.login, hashed_password=user.hashed_password)
+    async def set_username(self, user_id: uuid.UUID, new_username: str) -> UserSchema:
+        if await self.user_repository.get_user_by_login(login=new_username):
+            raise UserAlreadyExistsError
 
-    async def set_password(self, user_id: uuid.UUID, new_password: str) -> UserNewSchema:
+        user = await self.user_repository.update(user_id, {'username': new_username})
+        return UserSchema.model_validate(user)
+
+    async def set_password(self, user_id: uuid.UUID, new_password: str) -> UserSchema:
         user = await self.user_repository.update(user_id, {'hashed_password': new_password})
-        return UserNewSchema(login=user.login, hashed_password=user.hashed_password)
+        return UserSchema.model_validate(user)
 
 
 user_service = UserService()

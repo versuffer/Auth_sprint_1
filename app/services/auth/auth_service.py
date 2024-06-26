@@ -1,16 +1,24 @@
 import datetime
 import uuid
 
-from app.exceptions import TokenError, UserNotFoundError, WrongPasswordError
+from app.exceptions import (
+    TokenError,
+    UserAlreadyExistsError,
+    UserNotFoundError,
+    WrongPasswordError,
+)
 from app.schemas.api.v1.auth_schemas import (
     CredentialsLoginDataSchema,
     HistorySchema,
     HistorySchemaCreate,
     RefreshLoginDataSchema,
+    ResetPasswordSchema,
+    ResetUsernameSchema,
     SessionDataSchema,
     TokenPairSchema,
     UserTokenDataSchema,
 )
+from app.schemas.services.auth.user_service_schemas import UserSchema
 from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
 from app.services.auth.session_service import session_service
 from app.services.auth.user_service import user_service
@@ -93,3 +101,20 @@ class AuthenticationService:
             return [HistorySchema(**entry.model_dump()) for entry in history]
 
         raise UserNotFoundError
+
+    async def reset_username(self, reset_schema: ResetUsernameSchema) -> UserSchema:
+        try:
+            user = await self._get_user(login=reset_schema.login)
+            self._verify_user_password(user=user, password=reset_schema.password)
+            return await self.user_service.set_username(user.id, reset_schema.new_username)
+        except (UserNotFoundError, WrongPasswordError, UserAlreadyExistsError) as err:
+            raise err
+
+    async def reset_password(self, reset_schema: ResetPasswordSchema) -> UserSchema:
+        try:
+            user = await self._get_user(login=reset_schema.login)
+            self._verify_user_password(user=user, password=reset_schema.password)
+            new_hashed_password = self.password_service.hash_password(reset_schema.new_password)
+            return await self.user_service.set_password(user.id, new_hashed_password)
+        except (UserNotFoundError, WrongPasswordError) as err:
+            raise err
