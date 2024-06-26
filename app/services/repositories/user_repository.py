@@ -2,7 +2,6 @@ from uuid import UUID
 
 from email_validator import EmailNotValidError, validate_email
 from pydantic import EmailStr
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logs import logger
@@ -72,26 +71,6 @@ class UserRepository:
     async def update(self, user_id: UUID, data: dict) -> UserDBSchema | None:
         await self.db.update_obj(UserModel, where_value=[(UserModel.id, user_id)], update_values=data)
         return await self.get(user_id)
-
-    async def add_user_role(self, user_id: UUID, role_id: UUID) -> UserDBSchema | None:
-        try:
-            user_role = UserRoleAssociationModel(user_id=user_id, role_id=role_id)
-            await self.db.create_obj(user_role)
-            return await self.get(user_id)
-        except IntegrityError as err:
-            logger.error('user_id=%s already exist role_id=%s. Error=%s', user_id, role_id, err)
-            raise RoleAlreadyExistsError
-
-    async def delete_user_role(self, user_id: UUID, role_id: UUID) -> UserDBSchema | None:
-        try:
-            await self.db.delete_obj(
-                UserRoleAssociationModel,
-                where_value=[(UserRoleAssociationModel.user_id, user_id), (UserRoleAssociationModel.role_id, role_id)],
-            )
-            return await self.get(user_id)
-        except Exception as err:
-            logger.error('Can not delete role_id=%s error=%s', role_id, err)
-            return None
 
 
 user_repository = UserRepository()

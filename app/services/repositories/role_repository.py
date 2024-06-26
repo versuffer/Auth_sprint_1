@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from app.core.logs import logger
 from app.db.postgres.models.users import RoleModel, UserRoleAssociationModel
 from app.exceptions import RoleAlreadyExistsError
-from app.schemas.services.auth.role_service_schemas import RoleSchema, RoleSchemaCreate
+from app.schemas.services.auth.role_service_schemas import CreateRoleSchema, RoleSchema
 from app.services.repositories.postgres_repository import (
     PostgresRepository,
     postgres_repository,
@@ -29,7 +29,7 @@ class RoleRepository:
         db_role = await self.db.get_one_obj(RoleModel, where_value=[(RoleModel.title, role_title)])
         return RoleSchema.model_validate(db_role) if db_role else None
 
-    async def create(self, role_data: RoleSchemaCreate) -> RoleSchema | None:
+    async def create(self, role_data: CreateRoleSchema) -> RoleSchema | None:
         role = RoleModel(title=role_data.title, description=role_data.description)
         await self.db.create_obj(role)
         return await self.get(role.id)
