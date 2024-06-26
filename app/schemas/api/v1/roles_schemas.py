@@ -13,10 +13,6 @@ class GetRoleResponseSchema(RoleSchema):
     pass
 
 
-class CreateRoleResponseSchema(RoleSchema):
-    pass
-
-
 class GetUserRolesResponseSchema(BaseModel):
     user_id: uuid.UUID
     roles: list[RoleSchema]

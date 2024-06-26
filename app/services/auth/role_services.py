@@ -1,6 +1,6 @@
 import uuid
 
-from app.exceptions import RoleNotFoundError, UserNotFoundError
+from app.exceptions import RoleAlreadyExistsError, RoleNotFoundError, UserNotFoundError
 from app.schemas.api.v1.roles_schemas import (
     AssignUserRoleResponseSchema,
     RevokeUserRoleResponseSchema,
@@ -24,6 +24,9 @@ class RoleService:
         return role
 
     async def create_role(self, role_data: RoleSchemaCreate) -> RoleSchema:
+        if await self.role_repository.get_by_title(role_title=role_data.title):
+            raise RoleAlreadyExistsError
+
         return await self.role_repository.create(role_data)
 
     async def delete_role(self, role_id: uuid.UUID) -> bool:

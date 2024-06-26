@@ -1,21 +1,19 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 
 from app.api.docs.tags import ApiTags
 from app.exceptions import (
     AuthorizationError,
-    RoleAlreadyExistError,
+    RoleAlreadyExistsError,
     RoleNotFoundError,
     TokenError,
     UserNotFoundError,
     auth_error,
     not_found_error,
+    role_already_exists_error,
 )
-from app.schemas.api.v1.roles_schemas import (
-    CreateRoleResponseSchema,
-    RoleResponseSchema,
-)
+from app.schemas.api.v1.roles_schemas import RoleResponseSchema
 from app.schemas.services.auth.role_service_schemas import RoleSchemaCreate
 from app.services.auth.auth_service import AuthenticationService
 from app.services.auth.role_services import RoleService
@@ -69,18 +67,20 @@ async def get_role(
     '',
     status_code=status.HTTP_201_CREATED,
     summary='Создать роль',
-    response_model=CreateRoleResponseSchema,
+    response_model=RoleResponseSchema,
     tags=[ApiTags.V1_ROLES],
 )
 async def create_role(
-    # access_token: AuthorizationHeader (только для суперпользователей)
     role_data: RoleSchemaCreate,
-    service: RoleService = Depends(),
+    access_token: str = Depends(get_bearer_token),
+    auth_service: AuthenticationService = Depends(),
+    role_service: RoleService = Depends(),
 ):
     try:
-        return await service.create_role(role_data)
-    except RoleAlreadyExistError as err:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=err.message)
+        await auth_service.authorize_superuser(access_token=access_token)
+        return await role_service.create_role(role_data)
+    except RoleAlreadyExistsError:
+        raise role_already_exists_error
 
 
 @roles_router.delete(
