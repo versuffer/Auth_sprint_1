@@ -14,7 +14,10 @@ from app.exceptions import (
     role_already_exists_error,
 )
 from app.schemas.api.v1.roles_schemas import RoleResponseSchema
-from app.schemas.services.auth.role_service_schemas import RoleSchemaCreate
+from app.schemas.services.auth.role_service_schemas import (
+    CreateRoleSchema,
+    PartialUpdateRoleSchema,
+)
 from app.services.auth.auth_service import AuthenticationService
 from app.services.auth.role_services import RoleService
 from app.services.fastapi.dependencies import get_bearer_token
@@ -74,7 +77,7 @@ async def get_role(
     tags=[ApiTags.V1_ROLES],
 )
 async def create_role(
-    role_data: RoleSchemaCreate,
+    role_data: CreateRoleSchema,
     access_token: str = Depends(get_bearer_token),
     auth_service: AuthenticationService = Depends(),
     role_service: RoleService = Depends(),
@@ -86,6 +89,31 @@ async def create_role(
 
     try:
         return await role_service.create_role(role_data)
+    except RoleAlreadyExistsError:
+        raise role_already_exists_error
+
+
+@roles_router.patch(
+    '/{role_id}',
+    status_code=status.HTTP_200_OK,
+    summary='Изменить роль',
+    response_model=RoleResponseSchema,
+    tags=[ApiTags.V1_ROLES],
+)
+async def partially_update_role(
+    role_id: UUID,
+    role_data: PartialUpdateRoleSchema,
+    access_token: str = Depends(get_bearer_token),
+    auth_service: AuthenticationService = Depends(),
+    role_service: RoleService = Depends(),
+):
+    try:
+        await auth_service.authorize_superuser(access_token=access_token)
+    except (TokenError, UserNotFoundError, AuthorizationError):
+        raise auth_error
+
+    try:
+        return await role_service.partially_update_role(role_id=role_id, role_data=role_data)
     except RoleAlreadyExistsError:
         raise role_already_exists_error
 

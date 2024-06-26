@@ -7,7 +7,11 @@ from app.exceptions import (
     RoleNotFoundError,
     UserNotFoundError,
 )
-from app.schemas.services.auth.role_service_schemas import RoleSchema, RoleSchemaCreate
+from app.schemas.services.auth.role_service_schemas import (
+    CreateRoleSchema,
+    PartialUpdateRoleSchema,
+    RoleSchema,
+)
 from app.services.repositories.role_repository import role_repository
 from app.services.repositories.user_repository import user_repository
 from app.services.repositories.user_role_repository import user_role_repository
@@ -26,11 +30,20 @@ class RoleService:
 
         return role
 
-    async def create_role(self, role_data: RoleSchemaCreate) -> RoleSchema:
+    async def create_role(self, role_data: CreateRoleSchema) -> RoleSchema:
         if await self.role_repository.get_by_title(role_title=role_data.title):
             raise RoleAlreadyExistsError
 
         return await self.role_repository.create(role_data)
+
+    async def partially_update_role(self, role_id: uuid.UUID, role_data: PartialUpdateRoleSchema) -> RoleSchema:
+        if not await self.role_repository.get(role_id=role_id):
+            raise RoleNotFoundError
+
+        if (role := await self.role_repository.get_by_title(role_title=role_data.title)) and role.id != role_id:
+            raise RoleAlreadyExistsError
+
+        return await self.role_repository.update(role_id=role_id, data=role_data.model_dump(exclude_unset=True))
 
     async def delete_role(self, role_id: uuid.UUID) -> bool:
         if not await self.role_repository.get(role_id):

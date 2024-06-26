@@ -1,17 +1,22 @@
 import uuid
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class RoleSchemaBase(BaseModel):
     title: str
-    description: str
+    description: str | None
 
     model_config = ConfigDict(from_attributes=True)
 
 
-class RoleSchemaCreate(RoleSchemaBase):
+class CreateRoleSchema(RoleSchemaBase):
     pass
+
+
+class PartialUpdateRoleSchema(BaseModel):
+    title: str = Field(default=None)
+    description: str | None = Field(default=None)
 
 
 class RoleSchema(RoleSchemaBase):
