@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logs import logger
 from app.db.postgres.models.users import UserModel, UserRoleAssociationModel
-from app.exceptions import RoleAlreadyExistsError
+from app.exceptions import RoleAlreadyAssignedError
 from app.schemas.services.auth.user_service_schemas import UserCreateSchema
 from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
 from app.services.repositories.postgres_repository import (
@@ -73,16 +73,15 @@ class UserRepository:
         await self.db.update_obj(UserModel, where_value=[(UserModel.id, user_id)], update_values=data)
         return await self.get(user_id)
 
-    async def add_user_role(self, user_id: UUID, role_id: UUID) -> UserDBSchema | None:
+    async def assign_role_to_user(self, user_id: UUID, role_id: UUID) -> None:
         try:
             user_role = UserRoleAssociationModel(user_id=user_id, role_id=role_id)
             await self.db.create_obj(user_role)
-            return await self.get(user_id)
         except IntegrityError as err:
             logger.error('user_id=%s already exist role_id=%s. Error=%s', user_id, role_id, err)
-            raise RoleAlreadyExistsError
+            raise RoleAlreadyAssignedError
 
-    async def delete_user_role(self, user_id: UUID, role_id: UUID) -> UserDBSchema | None:
+    async def revoke_role_from_user(self, user_id: UUID, role_id: UUID) -> UserDBSchema | None:
         try:
             await self.db.delete_obj(
                 UserRoleAssociationModel,

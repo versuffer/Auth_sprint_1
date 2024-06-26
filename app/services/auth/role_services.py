@@ -1,9 +1,10 @@
 import uuid
 
-from app.exceptions import RoleAlreadyExistsError, RoleNotFoundError, UserNotFoundError
-from app.schemas.api.v1.roles_schemas import (
-    AssignUserRoleResponseSchema,
-    RevokeUserRoleResponseSchema,
+from app.exceptions import (
+    RoleAlreadyAssignedError,
+    RoleAlreadyExistsError,
+    RoleNotFoundError,
+    UserNotFoundError,
 )
 from app.schemas.services.auth.role_service_schemas import RoleSchema, RoleSchemaCreate
 from app.services.repositories.role_repository import role_repository
@@ -46,20 +47,21 @@ class UserRoleService:
             raise UserNotFoundError
         return [RoleSchema.model_validate(role) for role in user.roles]
 
-    async def assign_user_role(self, user_id: uuid.UUID, role_id: uuid.UUID) -> AssignUserRoleResponseSchema:
+    async def assign_user_role(self, user_id: uuid.UUID, role_id: uuid.UUID) -> None:
         if not await self.user_repository.get(user_id):
             raise UserNotFoundError
         if not await self.role_repository.get(role_id):
             raise RoleNotFoundError
 
-        user = await self.user_repository.add_user_role(user_id, role_id)
-        return AssignUserRoleResponseSchema(user_id=user_id, roles=user.roles)
+        try:
+            await self.user_repository.assign_role_to_user(user_id, role_id)
+        except RoleAlreadyAssignedError as err:
+            raise err
 
-    async def revoke_user_role(self, user_id: uuid.UUID, role_id: uuid.UUID) -> RevokeUserRoleResponseSchema:
+    async def revoke_user_role(self, user_id: uuid.UUID, role_id: uuid.UUID) -> None:
         if not await self.user_repository.get(user_id):
             raise UserNotFoundError
         if not await self.role_repository.get(role_id):
             raise RoleNotFoundError
 
-        user = await self.user_repository.delete_user_role(user_id, role_id)
-        return RevokeUserRoleResponseSchema(user_id=user_id, roles=user.roles)
+        await self.user_repository.revoke_role_from_user(user_id, role_id)

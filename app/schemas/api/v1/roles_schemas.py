@@ -1,7 +1,3 @@
-import uuid
-
-from pydantic import BaseModel
-
 from app.schemas.services.auth.role_service_schemas import RoleSchema
 
 
@@ -10,17 +6,4 @@ class RoleResponseSchema(RoleSchema):
 
 
 class GetRoleResponseSchema(RoleSchema):
-    pass
-
-
-class GetUserRolesResponseSchema(BaseModel):
-    user_id: uuid.UUID
-    roles: list[RoleSchema]
-
-
-class AssignUserRoleResponseSchema(GetUserRolesResponseSchema):
-    pass
-
-
-class RevokeUserRoleResponseSchema(GetUserRolesResponseSchema):
     pass
