@@ -1,6 +1,6 @@
 import pytest
-from httpx import AsyncClient
 from fastapi import status
+from httpx import AsyncClient
 
 from app.exceptions import user_already_exists_error
 from app.main import app
@@ -12,7 +12,7 @@ from app.services.repositories.user_repository import user_repository
 
 
 @pytest.mark.anyio
-class TestAuthentication:
+class TestRegister:
     async def test_register_201(self, async_test_client: AsyncClient):
         # Arrange
         user_data = RegisterUserCredentialsSchema(
@@ -32,10 +32,28 @@ class TestAuthentication:
     async def test_register_409_username_duplicate(self, async_test_client: AsyncClient):
         # Arrange
         user_data = RegisterUserCredentialsSchema(
-            username='random_username', email='another@email.com', password='random_password'
+            username='random_username', email='random@email.com', password='random_password'
         )
         user_data_json = user_data.model_dump(mode='json')
         await async_test_client.post(app.url_path_for('api_v1_register'), json=user_data_json)
+        user_data_json['email'] = 'another@email.com'
+
+        # Act
+        response = await async_test_client.post(app.url_path_for('api_v1_register'), json=user_data_json)
+        response_json = response.json()
+
+        # Assert
+        assert response.status_code == status.HTTP_409_CONFLICT
+        assert response_json == {'detail': user_already_exists_error.detail}
+
+    async def test_register_409_email_duplicate(self, async_test_client: AsyncClient):
+        # Arrange
+        user_data = RegisterUserCredentialsSchema(
+            username='random_username', email='random@email.com', password='random_password'
+        )
+        user_data_json = user_data.model_dump(mode='json')
+        await async_test_client.post(app.url_path_for('api_v1_register'), json=user_data_json)
+        user_data_json['username'] = 'another_username'
 
         # Act
         response = await async_test_client.post(app.url_path_for('api_v1_register'), json=user_data_json)
