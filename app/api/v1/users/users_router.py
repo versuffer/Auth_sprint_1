@@ -3,13 +3,23 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.docs.tags import ApiTags
-from app.exceptions import RoleAlreadyExistsError, RoleNotFoundError, UserNotFoundError
+from app.exceptions import (
+    AuthorizationError,
+    RoleAlreadyExistsError,
+    RoleNotFoundError,
+    TokenError,
+    UserNotFoundError,
+    auth_error,
+    user_not_found_error,
+)
 from app.schemas.api.v1.roles_schemas import (
     AssignUserRoleResponseSchema,
     RevokeUserRoleResponseSchema,
     RoleResponseSchema,
 )
+from app.services.auth.auth_service import AuthenticationService
 from app.services.auth.role_services import UserRoleService
+from app.services.fastapi.dependencies import get_bearer_token
 
 users_router = APIRouter(prefix='/users')
 
@@ -23,13 +33,19 @@ users_router = APIRouter(prefix='/users')
 )
 async def get_user_roles(
     user_id: UUID,
-    service: UserRoleService = Depends(),
-    # access_token: AuthorizationHeader (только для суперпользователей)
+    access_token: str = Depends(get_bearer_token),
+    auth_service: AuthenticationService = Depends(),
+    user_role_service: UserRoleService = Depends(),
 ):
     try:
-        return await service.get_user_roles(user_id)
+        await auth_service.authorize_superuser(access_token=access_token)
+    except (TokenError, UserNotFoundError, AuthorizationError):
+        raise auth_error
+
+    try:
+        return await user_role_service.get_user_roles(user_id)
     except UserNotFoundError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователя с таким id не существует.')
+        raise user_not_found_error
 
 
 @users_router.post(
