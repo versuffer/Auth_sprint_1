@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, Header, status
 
 from app.api.docs.tags import ApiTags
 from app.exceptions import (
@@ -169,8 +169,8 @@ async def reset_password(
     response_model=list[HistoryResponseSchema],
     tags=[ApiTags.V1_AUTH],
 )
-async def get_history(access_token: str, service: AuthenticationService = Depends()):
+async def get_history(access_token: str = Depends(get_bearer_token), service: AuthenticationService = Depends()):
     try:
         return await service.get_history(access_token)
-    except UserNotFoundError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Пользователя не существует.')
+    except (TokenError, UserNotFoundError):
+        raise auth_error

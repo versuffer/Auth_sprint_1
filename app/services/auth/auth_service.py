@@ -91,16 +91,12 @@ class AuthenticationService:
             raise err
 
     async def get_history(self, access_token: str) -> list[HistorySchema]:
-        login = await self.session_service.get_login_from_access_token(access_token)
-
-        if not login:
-            raise
-
-        if login and (user := await self.user_service.get_user(login)):
-            history = await self.user_service.get_history(user)
-            return [HistorySchema(**entry.model_dump()) for entry in history]
-
-        raise UserNotFoundError
+        try:
+            login = await self.session_service.get_login_from_access_token(access_token)
+            user = await self._get_user(login)
+            return await self.user_service.get_history(user)
+        except (TokenError, UserNotFoundError) as err:
+            raise err
 
     async def reset_username(self, reset_schema: ResetUsernameSchema) -> UserSchema:
         try:
