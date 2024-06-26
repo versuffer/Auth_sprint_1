@@ -1,5 +1,7 @@
+import asyncio
 from functools import wraps
 
+import anyio
 import typer
 from sqlalchemy.exc import IntegrityError
 
@@ -16,7 +18,7 @@ def admin_required(func):
     """Проверка прав для выполнения команд."""
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if app_settings.IS_ADMIN != 'True' or not app_settings.ADMIN_CLI_PASSWORD:
+        if app_settings.IS_ADMIN is not True or not app_settings.ADMIN_CLI_PASSWORD:
             print('Permission denied.')
             return
         user_password = typer.prompt('Enter your cli admin password', hide_input=True)
@@ -27,9 +29,9 @@ def admin_required(func):
     return wrapper
 
 
-@cli_app.command("create-user")
+@cli_app.command("create-superuser")
 @admin_required
-def create_user():
+def create_superuser():
     """Create user in DB or print exception."""
     try:
         user_repository = UserRepository()
@@ -40,12 +42,12 @@ def create_user():
             hashed_password=typer.prompt('password', hide_input=True),
             is_superuser=True,
         )
-        user_repository.create(user)
+        asyncio.run(user_repository.create(user))
         logger.info(f'Admin "{user.username}" successfully created.')
     except IntegrityError:
         print('An admin with this login already exists.')
-    except Exception:
-        print('Oops some thing wrong')
+    except Exception as e:
+        print(f'Oops, something went wrong: {e}')
 
 
 if __name__ == '__main__':
