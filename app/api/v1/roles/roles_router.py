@@ -39,10 +39,7 @@ async def get_roles(
     except (TokenError, UserNotFoundError, AuthorizationError):
         raise auth_error
 
-    try:
-        return await role_service.get_roles()
-    except (TokenError, UserNotFoundError, AuthorizationError):
-        raise auth_error
+    return await role_service.get_roles()
 
 
 @roles_router.get(
