@@ -6,7 +6,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logs import logger
-from app.db.postgres.base import manage_async_session
 from app.db.postgres.models.users import UserModel, UserRoleAssociationModel
 from app.exceptions import RoleAlreadyExistError
 from app.schemas.services.auth.user_service_schemas import UserCreateSchema
@@ -57,20 +56,18 @@ class UserRepository:
         )
         return UserDBSchema.model_validate(db_user) if db_user else None
 
-    async def get(self, user_id: UUID, *, session: AsyncSession | None = None) -> UserDBSchema | None:
+    async def get(self, user_id: UUID) -> UserDBSchema | None:
         db_user = await self.db.get_one_obj(
             UserModel,
             where_value=[(UserModel.id, user_id)],
             select_in_load=[UserModel.roles, UserModel.history],
-            session=session,
         )
         return UserDBSchema.model_validate(db_user) if db_user else None
 
-    @manage_async_session
-    async def create(self, user_data: UserCreateSchema, *, session: AsyncSession | None = None) -> UserDBSchema:
+    async def create(self, user_data: UserCreateSchema) -> UserDBSchema:
         user_model = UserModel(**user_data.model_dump())
         await self.db.create_obj(user_model)
-        return await self.get(user_model.id, session=session)
+        return await self.get(user_model.id)
 
     async def update(self, user_id: UUID, data: dict) -> UserDBSchema | None:
         try:
