@@ -19,3 +19,7 @@ class UserCreateSchema(BaseModel):
     username: str
     email: EmailStr
     hashed_password: str
+
+
+class SuperUserCreateSchema(UserCreateSchema):
+    is_superuser: bool

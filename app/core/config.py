@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     REDIS_DB: str
     REDIS_DSN: RedisDsn | str = ''
 
+    # CLI
+    ADMIN_CLI_PASSWORD: str = ''
+    IS_ADMIN: bool = False
+
     model_config = SettingsConfigDict(env_file=BASEDIR / '.env')
 
     @field_validator('POSTGRES_DSN')

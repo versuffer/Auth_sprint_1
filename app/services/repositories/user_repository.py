@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logs import logger
 from app.db.postgres.models.users import UserModel, UserRoleAssociationModel
 from app.exceptions import RoleAlreadyExistsError
-from app.schemas.services.auth.user_service_schemas import UserCreateSchema
+from app.schemas.services.auth.user_service_schemas import UserCreateSchema, SuperUserCreateSchema
 from app.schemas.services.repositories.user_repository_schemas import UserDBSchema
 from app.services.repositories.postgres_repository import (
     PostgresRepository,
@@ -64,7 +64,7 @@ class UserRepository:
         )
         return UserDBSchema.model_validate(db_user) if db_user else None
 
-    async def create(self, user_data: UserCreateSchema) -> UserDBSchema:
+    async def create(self, user_data: UserCreateSchema | SuperUserCreateSchema) -> UserDBSchema:
         user_model = UserModel(**user_data.model_dump())
         await self.db.create_obj(user_model)
         return await self.get(user_model.id)
