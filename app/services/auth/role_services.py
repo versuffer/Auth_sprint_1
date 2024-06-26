@@ -10,7 +10,7 @@ from app.services.repositories.role_repository import role_repository
 from app.services.repositories.user_repository import user_repository
 
 
-class RolesService:
+class RoleService:
     def __init__(self):
         self.role_repository = role_repository
 
@@ -18,7 +18,10 @@ class RolesService:
         return [RoleSchema.validate(role) for role in await self.role_repository.get_all()]
 
     async def get_role(self, role_id: uuid.UUID) -> RoleSchema:
-        return await self.role_repository.get(role_id)
+        if not (role := await self.role_repository.get(role_id)):
+            raise RoleNotFoundError
+
+        return role
 
     async def create_role(self, role_data: RoleSchemaCreate) -> RoleSchema:
         return await self.role_repository.create(role_data)

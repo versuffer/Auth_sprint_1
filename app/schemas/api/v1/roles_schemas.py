@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from app.schemas.services.auth.role_service_schemas import RoleSchema
 
 
-class GetRolesResponseSchema(RoleSchema):
+class RoleResponseSchema(RoleSchema):
     pass
 
 

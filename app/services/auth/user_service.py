@@ -1,6 +1,6 @@
 import uuid
 
-from app.exceptions import UserAlreadyExistsError
+from app.exceptions import UserAlreadyExistsError, UserNotFoundError
 from app.schemas.api.v1.auth_schemas import (
     CreateUserCredentialsSchema,
     HistorySchema,
@@ -24,8 +24,11 @@ class UserService:
         except UserAlreadyExistsError as err:
             raise err
 
-    async def get_user(self, login: str) -> UserDBSchema | None:
-        return await self.user_repository.get_user_by_login(login)
+    async def get_user(self, login: str) -> UserDBSchema:
+        if not (user := await self.user_repository.get_user_by_login(login)):
+            raise UserNotFoundError
+
+        return user
 
     async def get_user_by_credentials(self, user_credentials: CreateUserCredentialsSchema) -> UserDBSchema | None:
         return await self.user_repository.get_user_by_credentials(

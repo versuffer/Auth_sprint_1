@@ -2,6 +2,7 @@ import datetime
 import uuid
 
 from app.exceptions import (
+    AuthorizationError,
     TokenError,
     UserAlreadyExistsError,
     UserNotFoundError,
@@ -31,12 +32,6 @@ class AuthenticationService:
         self.user_service = user_service
         self.session_service = session_service
 
-    async def _get_user(self, login: str) -> UserDBSchema:
-        if not (user := await self.user_service.get_user(login)):
-            raise UserNotFoundError
-
-        return user
-
     def _verify_user_password(self, user: UserDBSchema, password: str):
         if not self.password_service.verify_password(user.hashed_password, password):
             raise WrongPasswordError
@@ -59,7 +54,7 @@ class AuthenticationService:
 
     async def authenticate_by_credentials(self, login_data: CredentialsLoginDataSchema) -> TokenPairSchema:
         try:
-            user = await self._get_user(login=login_data.login)
+            user = await self.user_service.get_user(login=login_data.login)
             self._verify_user_password(user=user, password=login_data.password)
             session_data = await self._create_session(user=user)
             await self._save_user_login_history(user=user, login_data=login_data, session_id=session_data.session_id)
@@ -70,7 +65,7 @@ class AuthenticationService:
     async def authenticate_by_refresh_token(self, login_data: RefreshLoginDataSchema) -> TokenPairSchema:
         try:
             login = await self.session_service.get_login_from_refresh_token(refresh_token=login_data.refresh_token)
-            user = await self._get_user(login=login)
+            user = await self.user_service.get_user(login=login)
             session_data = await self._create_session(user=user)
             await self.session_service.delete_session(token=login_data.refresh_token)
             await self._save_user_login_history(user=user, login_data=login_data, session_id=session_data.session_id)
@@ -93,14 +88,14 @@ class AuthenticationService:
     async def get_history(self, access_token: str) -> list[HistorySchema]:
         try:
             login = await self.session_service.get_login_from_access_token(access_token)
-            user = await self._get_user(login)
+            user = await self.user_service.get_user(login)
             return await self.user_service.get_history(user)
         except (TokenError, UserNotFoundError) as err:
             raise err
 
     async def reset_username(self, reset_schema: ResetUsernameSchema) -> UserSchema:
         try:
-            user = await self._get_user(login=reset_schema.login)
+            user = await self.user_service.get_user(login=reset_schema.login)
             self._verify_user_password(user=user, password=reset_schema.password)
             return await self.user_service.set_username(user.id, reset_schema.new_username)
         except (UserNotFoundError, WrongPasswordError, UserAlreadyExistsError) as err:
@@ -108,9 +103,19 @@ class AuthenticationService:
 
     async def reset_password(self, reset_schema: ResetPasswordSchema) -> UserSchema:
         try:
-            user = await self._get_user(login=reset_schema.login)
+            user = await self.user_service.get_user(login=reset_schema.login)
             self._verify_user_password(user=user, password=reset_schema.password)
             new_hashed_password = self.password_service.hash_password(reset_schema.new_password)
             return await self.user_service.set_password(user.id, new_hashed_password)
         except (UserNotFoundError, WrongPasswordError) as err:
             raise err
+
+    async def authorize_superuser(self, access_token: str) -> None:
+        try:
+            login = await self.session_service.get_login_from_access_token(access_token=access_token)
+            user = await self.user_service.get_user(login=login)
+        except (TokenError, UserNotFoundError) as err:
+            raise err
+
+        if not user.is_superuser:
+            raise AuthorizationError

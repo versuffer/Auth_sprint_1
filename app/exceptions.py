@@ -60,5 +60,10 @@ class RoleAlreadyExistError(BaseError):
     pass
 
 
+class AuthorizationError(BaseError):
+    pass
+
+
 auth_error = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Unauthorized')
+not_found_error = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Not Found')
 user_already_exists_error = HTTPException(status_code=status.HTTP_409_CONFLICT, detail='User already exists')
