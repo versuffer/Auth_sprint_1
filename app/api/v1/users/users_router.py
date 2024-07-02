@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 
 from app.api.docs.tags import ApiTags
-from app.api.error_decorators import handle_auth_router_errors
+from app.api.error_decorators import handle_errors
 from app.schemas.api.v1.roles_schemas import RoleResponseSchema
 from app.services.auth.auth_service import AuthenticationService
 from app.services.auth.role_services import UserRoleService
@@ -19,7 +19,7 @@ users_router = APIRouter(prefix='/users')
     response_model=list[RoleResponseSchema],
     tags=[ApiTags.V1_USERS],
 )
-@handle_auth_router_errors
+@handle_errors
 async def get_user_roles(
     user_id: UUID,
     access_token: str = Depends(get_bearer_token),
@@ -36,7 +36,7 @@ async def get_user_roles(
     summary='Назначить роль пользователю',
     tags=[ApiTags.V1_USERS],
 )
-@handle_auth_router_errors
+@handle_errors
 async def assign_user_role(
     user_id: UUID,
     role_id: UUID,
@@ -55,7 +55,7 @@ async def assign_user_role(
     summary='Отозвать роль у пользователя',
     tags=[ApiTags.V1_USERS],
 )
-@handle_auth_router_errors
+@handle_errors
 async def revoke_user_role(
     user_id: UUID,
     role_id: UUID,

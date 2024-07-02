@@ -15,7 +15,7 @@ from app.exceptions import (
 )
 
 
-def handle_auth_router_errors(func):
+def handle_errors(func):
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         try:
