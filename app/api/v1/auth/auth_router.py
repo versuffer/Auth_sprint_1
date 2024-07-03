@@ -1,7 +1,6 @@
-from fastapi import APIRouter, Depends, Header, status
+from fastapi import APIRouter, Depends, Header, Query, status
 
 from app.api.docs.tags import ApiTags
-from app.api.error_decorators import handle_auth_errors
 from app.exceptions import (
     TokenError,
     UserAlreadyExistsError,
@@ -37,7 +36,6 @@ auth_router = APIRouter(prefix='/auth')
     response_model=RegisterResponseSchema,
     tags=[ApiTags.V1_AUTH],
 )
-@handle_auth_errors
 async def api_v1_register(
     user_credentials: RegisterUserCredentialsSchema,
     service: RegistrationService = Depends(),
@@ -55,7 +53,6 @@ async def api_v1_register(
     response_model=TokenPairSchema,
     tags=[ApiTags.V1_AUTH],
 )
-@handle_auth_errors
 async def api_v1_login(
     user_credentials: UserCredentialsSchema,
     user_agent: str = Header(),
@@ -79,7 +76,6 @@ async def api_v1_login(
     response_model=TokenPairSchema,
     tags=[ApiTags.V1_AUTH],
 )
-@handle_auth_errors
 async def api_v1_refresh(
     refresh_token: str = Depends(get_bearer_token),
     user_agent: str = Header(),
@@ -173,8 +169,13 @@ async def api_v1_reset_password(
     response_model=list[HistoryResponseSchema],
     tags=[ApiTags.V1_AUTH],
 )
-async def api_v1_get_history(access_token: str = Depends(get_bearer_token), service: AuthenticationService = Depends()):
+async def api_v1_get_history(
+    access_token: str = Depends(get_bearer_token),
+    service: AuthenticationService = Depends(),
+    limit: int = Query(10, description="Максимальное количество записей для возврата"),
+    offset: int = Query(0, description="Смещение для пагинации"),
+):
     try:
-        return await service.get_history(access_token)
+        return await service.get_history(access_token, limit, offset)
     except (TokenError, UserNotFoundError):
         raise auth_error
