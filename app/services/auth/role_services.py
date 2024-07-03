@@ -59,7 +59,6 @@ class UserRoleService:
         self.user_role_repository = user_role_repository
 
     async def get_user_roles(self, user_id: uuid.UUID) -> list[RoleSchema]:
-        raise UserNotFoundError
         if not (user := await self.user_repository.get(user_id)):
             raise UserNotFoundError
         return [RoleSchema.model_validate(role) for role in user.roles]
