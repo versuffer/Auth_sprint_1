@@ -15,6 +15,8 @@ class PostgresRepository:
         where_value: list[tuple[Column, Any]] | None = None,
         select_in_load: Column | None = None,
         update_values: dict | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ):
         query = action(model)
         if where_value and len(where_value) == 1:
@@ -26,12 +28,16 @@ class PostgresRepository:
             query = query.options(*[selectinload(column) for column in select_in_load])
         if action == update:
             query = query.values(**update_values)
+        if limit is not None:
+            query = query.limit(limit)
+        if offset is not None:
+            query = query.offset(offset)
 
         return query
 
     @manage_async_session
-    async def get_one_obj(self, model, *, session: AsyncSession | None = None, **kwargs):
-        query = self._build_query(model, **kwargs)
+    async def get_one_obj(self, model, *, session: AsyncSession | None = None, limit=None, offset=None, **kwargs):
+        query = self._build_query(model, limit=limit, offset=offset, **kwargs)
         result = await session.execute(query)
         return result.scalar_one_or_none()
 

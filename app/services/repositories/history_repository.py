@@ -13,8 +13,10 @@ class HistoryRepository:
     def __init__(self):
         self.db: PostgresRepository = postgres_repository
 
-    async def get(self, user: UserDBSchema) -> list[HistoryDBSchema]:
-        history = await self.db.get_all_obj(HistoryModel, where_value=[(HistoryModel.user_id, user.id)])
+    async def get(self, user: UserDBSchema, limit: int | None, offset: int | None) -> list[HistoryDBSchema]:
+        history = await self.db.get_all_obj(
+            HistoryModel, where_value=[(HistoryModel.user_id, user.id)], limit=limit, offset=offset
+        )
         return [HistoryDBSchema.model_validate(entry) for entry in history]
 
     async def create(self, history_data: HistorySchemaCreate) -> None:

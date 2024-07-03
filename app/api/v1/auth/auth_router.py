@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Header, status
+from fastapi import APIRouter, Depends, Header, Query, status
 
 from app.api.docs.tags import ApiTags
 from app.exceptions import (
@@ -169,8 +169,13 @@ async def api_v1_reset_password(
     response_model=list[HistoryResponseSchema],
     tags=[ApiTags.V1_AUTH],
 )
-async def api_v1_get_history(access_token: str = Depends(get_bearer_token), service: AuthenticationService = Depends()):
+async def api_v1_get_history(
+    access_token: str = Depends(get_bearer_token),
+    service: AuthenticationService = Depends(),
+    limit: int = Query(10, description="Максимальное количество записей для возврата"),
+    offset: int = Query(0, description="Смещение для пагинации"),
+):
     try:
-        return await service.get_history(access_token)
+        return await service.get_history(access_token, limit, offset)
     except (TokenError, UserNotFoundError):
         raise auth_error

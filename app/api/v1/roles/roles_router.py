@@ -3,13 +3,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Response, status
 
 from app.api.docs.tags import ApiTags
+from app.api.error_decorators import handle_auth_superuser_errors
 from app.exceptions import (
-    AuthorizationError,
     RoleAlreadyExistsError,
     RoleNotFoundError,
-    TokenError,
-    UserNotFoundError,
-    auth_error,
     not_found_error,
     role_already_exists_error,
 )
@@ -32,16 +29,13 @@ roles_router = APIRouter(prefix='/roles')
     response_model=list[RoleResponseSchema],
     tags=[ApiTags.V1_ROLES],
 )
+@handle_auth_superuser_errors
 async def get_roles(
     access_token: str = Depends(get_bearer_token),
     auth_service: AuthenticationService = Depends(),
     role_service: RoleService = Depends(),
 ):
-    try:
-        await auth_service.authorize_superuser(access_token=access_token)
-    except (TokenError, UserNotFoundError, AuthorizationError):
-        raise auth_error
-
+    await auth_service.authorize_superuser(access_token=access_token)
     return await role_service.get_roles()
 
 
@@ -52,17 +46,14 @@ async def get_roles(
     response_model=RoleResponseSchema,
     tags=[ApiTags.V1_ROLES],
 )
+@handle_auth_superuser_errors
 async def get_role(
     role_id: UUID,
     access_token: str = Depends(get_bearer_token),
     auth_service: AuthenticationService = Depends(),
     role_service: RoleService = Depends(),
 ):
-    try:
-        await auth_service.authorize_superuser(access_token=access_token)
-    except (TokenError, UserNotFoundError, AuthorizationError):
-        raise auth_error
-
+    await auth_service.authorize_superuser(access_token=access_token)
     try:
         return await role_service.get_role(role_id)
     except RoleNotFoundError:
@@ -76,17 +67,14 @@ async def get_role(
     response_model=RoleResponseSchema,
     tags=[ApiTags.V1_ROLES],
 )
+@handle_auth_superuser_errors
 async def create_role(
     role_data: CreateRoleSchema,
     access_token: str = Depends(get_bearer_token),
     auth_service: AuthenticationService = Depends(),
     role_service: RoleService = Depends(),
 ):
-    try:
-        await auth_service.authorize_superuser(access_token=access_token)
-    except (TokenError, UserNotFoundError, AuthorizationError):
-        raise auth_error
-
+    await auth_service.authorize_superuser(access_token=access_token)
     try:
         return await role_service.create_role(role_data)
     except RoleAlreadyExistsError:
@@ -100,6 +88,7 @@ async def create_role(
     response_model=RoleResponseSchema,
     tags=[ApiTags.V1_ROLES],
 )
+@handle_auth_superuser_errors
 async def partially_update_role(
     role_id: UUID,
     role_data: PartialUpdateRoleSchema,
@@ -107,11 +96,7 @@ async def partially_update_role(
     auth_service: AuthenticationService = Depends(),
     role_service: RoleService = Depends(),
 ):
-    try:
-        await auth_service.authorize_superuser(access_token=access_token)
-    except (TokenError, UserNotFoundError, AuthorizationError):
-        raise auth_error
-
+    await auth_service.authorize_superuser(access_token=access_token)
     try:
         return await role_service.partially_update_role(role_id=role_id, role_data=role_data)
     except RoleAlreadyExistsError:
@@ -124,17 +109,14 @@ async def partially_update_role(
     summary='Удалить роль',
     tags=[ApiTags.V1_ROLES],
 )
+@handle_auth_superuser_errors
 async def delete_role(
     role_id: UUID,
     access_token: str = Depends(get_bearer_token),
     auth_service: AuthenticationService = Depends(),
     role_service: RoleService = Depends(),
 ):
-    try:
-        await auth_service.authorize_superuser(access_token=access_token)
-    except (TokenError, UserNotFoundError, AuthorizationError):
-        raise auth_error
-
+    await auth_service.authorize_superuser(access_token=access_token)
     try:
         await role_service.delete_role(role_id)
         return Response(status_code=status.HTTP_204_NO_CONTENT)

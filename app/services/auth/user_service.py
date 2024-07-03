@@ -38,8 +38,8 @@ class UserService:
     async def save_login_history(self, history_data: HistorySchemaCreate) -> None:
         await self.history_repository.create(history_data)
 
-    async def get_history(self, user: UserDBSchema) -> list[HistorySchema]:
-        return [HistorySchema.model_validate(entry) for entry in await self.history_repository.get(user)]
+    async def get_history(self, user: UserDBSchema, limit: int, offset: int) -> list[HistorySchema]:
+        return [HistorySchema.model_validate(entry) for entry in await self.history_repository.get(user, limit, offset)]
 
     async def set_username(self, user_id: uuid.UUID, new_username: str) -> UserSchema:
         if await self.user_repository.get_user_by_login(login=new_username):

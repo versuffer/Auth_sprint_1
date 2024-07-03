@@ -85,11 +85,11 @@ class AuthenticationService:
         except TokenError as err:
             raise err
 
-    async def get_history(self, access_token: str) -> list[HistorySchema]:
+    async def get_history(self, access_token: str, limit: int, offset: int) -> list[HistorySchema]:
         try:
             login = await self.session_service.get_login_from_access_token(access_token)
             user = await self.user_service.get_user(login)
-            return await self.user_service.get_history(user)
+            return await self.user_service.get_history(user, limit, offset)
         except (TokenError, UserNotFoundError) as err:
             raise err
 
