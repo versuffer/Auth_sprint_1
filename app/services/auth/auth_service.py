@@ -81,7 +81,7 @@ class AuthenticationService:
 
     async def verify_access_token(self, access_token: str) -> bool:
         try:
-            return self.session_service.verify_access_token(access_token)
+            return await self.session_service.verify_access_token(access_token)
         except TokenError as err:
             raise err
 
